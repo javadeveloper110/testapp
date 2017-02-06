@@ -7,14 +7,40 @@ import android.widget.Button;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
-
+    
+    private boolean rendererSet = false;
+    MyGLSurfaceView glSurfaceView;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Button button = new Button(this);
-        button.setText("Big button");
         
-        setContentView(button);
+        glSurfaceView = new MyGLSurfaceView(this);
+        
+        glSurfaceView.setEGLContextClientVersion(1);
+        
+        // Create a GLSurfaceView instance and set it
+        // as the ContentView for this Activity.
+        
+        glSurfaceView.setRenderer(new MyRenderer());
+        
+        setContentView(glSurfaceView);
+        
+        rendererSet = true;
+    }
+    
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        
+        glSurfaceView.onPause();
+    }
+    
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        
+        glSurfaceView.onResume();
     }
 }
