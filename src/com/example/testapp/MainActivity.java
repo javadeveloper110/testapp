@@ -5,18 +5,20 @@ import android.app.AlertDialog;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.Toast;
+import android.opengl.GLSurfaceView;
 
 public class MainActivity extends Activity {
     
-    private boolean rendererSet = false;
-    MyGLSurfaceView glSurfaceView;
+    private
+        GLSurfaceView glSurfaceView;
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        glSurfaceView = new MyGLSurfaceView(this);
+        glSurfaceView = new GLSurfaceView(this);
         
-        glSurfaceView.setEGLContextClientVersion(1);
+        glSurfaceView.setEGLContextClientVersion(2);
         
         // Create a GLSurfaceView instance and set it
         // as the ContentView for this Activity.
@@ -24,8 +26,6 @@ public class MainActivity extends Activity {
         glSurfaceView.setRenderer(new MyRenderer());
         
         setContentView(glSurfaceView);
-        
-        rendererSet = true;
     }
     
     @Override
