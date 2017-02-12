@@ -11,9 +11,29 @@ public class MyRenderer implements Renderer
     final
         String TAG = "MyRenderer",
         
-        vertexShaderSource = "void main() {}",
+        vertexShaderSource = ""
+                            +""
+                            +""
+                            +"void main()"
+                            +"{"
+                            +"gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"
+                            +""
+                            +""
+                            +""
+                            +""
+                            +"}",
         
-        fragmentShaderSource = "void main() {}";
+        fragmentShaderSource = ""
+                            +""
+                            +""
+                            +"void main()"
+                            +"{"
+                            +"gl_FragColor = vec4(0.3, 0.2, 0.7, 1.0);"
+                            +""
+                            +""
+                            +""
+                            +""
+                            +"}";
     
     public void onDrawFrame(GL10 unused)
     {
