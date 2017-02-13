@@ -124,6 +124,14 @@ public class MyRenderer implements Renderer
             
             int a_position_loc = GLES20.glGetAttribLocation(program, "a_position");
             
+            GLES20.glVertexAttribPointer (a_position_loc, 
+                4,//int size, 
+                GLES20.GL_SHORT,//int type, 
+                true,//boolean normalized, 
+                4,//int stride, 
+                0//int offset
+            );
+            
             Log.i(TAG, "a_position_loc: "+ a_position_loc);
         }
         catch(Exception e)
