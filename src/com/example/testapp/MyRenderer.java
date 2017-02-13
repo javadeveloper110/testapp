@@ -80,7 +80,7 @@ public class MyRenderer implements Renderer
     public void onSurfaceCreated(GL10 unused, EGLConfig config)
     {
         Date d = new Date();
-        Log.v(TAG, "\n\n"+ 	d.toLocaleString() +"\n=============================================================================");
+        Log.v(TAG, "\n\n"+ 	d.toGMTString() +"\n=============================================================================");
         //Log.i(TAG, "MyRenderer.onSurfaceCreated begin");
         
         try
