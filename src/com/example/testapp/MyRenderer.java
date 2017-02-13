@@ -15,12 +15,12 @@ public class MyRenderer implements Renderer
     final
         String TAG = "MyRenderer",
         
-        vertexShaderSource = ""
+        vertexShaderSource = "attribute vec4 a_position;"
                             +""
                             +""
                             +"void main()"
                             +"{"
-                            +"gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"
+                            +"gl_Position = a_position;"
                             +""
                             +""
                             +""
@@ -77,6 +77,41 @@ public class MyRenderer implements Renderer
         return shader;
     }
     
+    private int createProgram() throws Exception
+    {
+         int
+            program = GLES20.glCreateProgram(),
+            params[] = new int[1];
+        
+        if(program == 0)
+            throw new Exception("can't create a gl program object");
+        
+        GLES20.glAttachShader(program, loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderSource));
+        GLES20.glAttachShader(program, loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderSource));
+        GLES20.glGetProgramiv(program, GLES20.GL_ATTACHED_SHADERS, params, 0);
+        
+        if(params[0] != 2)
+            throw new Exception("can not attach shaders");
+        
+        GLES20.glLinkProgram(program);
+        GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, params, 0);
+        
+        if(params[0] == 0)
+            throw new Exception(GLES20.glGetProgramInfoLog(program));
+        
+        GLES20.glValidateProgram(program);
+        GLES20.glGetProgramiv(program, GLES20.GL_VALIDATE_STATUS, params, 0);
+        
+        if(params[0] == 0)
+            throw new Exception(GLES20.glGetProgramInfoLog(program));
+        
+        GLES20.glUseProgram(program);
+        
+        __logProgramInfo(program);
+        
+        return program;
+    }
+    
     public void onSurfaceCreated(GL10 unused, EGLConfig config)
     {
         Date d = new Date();
@@ -85,35 +120,11 @@ public class MyRenderer implements Renderer
         
         try
         {
-            int
-                program = GLES20.glCreateProgram(),
-                params[] = new int[1];
+            int program = createProgram();
             
-            if(program == 0)
-                throw new Exception("can't create a gl program object");
+            int a_position_loc = GLES20.glGetAttribLocation(program, "a_position");
             
-            GLES20.glAttachShader(program, loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderSource));
-            GLES20.glAttachShader(program, loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderSource));
-            GLES20.glGetProgramiv(program, GLES20.GL_ATTACHED_SHADERS, params, 0);
-            
-            if(params[0] != 2)
-                throw new Exception("can not attach shaders");
-            
-            GLES20.glLinkProgram(program);
-            GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, params, 0);
-            
-            if(params[0] == 0)
-                throw new Exception(GLES20.glGetProgramInfoLog(program));
-            
-            GLES20.glValidateProgram(program);
-            GLES20.glGetProgramiv(program, GLES20.GL_VALIDATE_STATUS, params, 0);
-            
-            if(params[0] == 0)
-                throw new Exception(GLES20.glGetProgramInfoLog(program));
-            
-            GLES20.glUseProgram(program);
-            
-            __logProgramInfo(program);
+            Log.i(TAG, "a_position_loc: "+ a_position_loc);
         }
         catch(Exception e)
         {
