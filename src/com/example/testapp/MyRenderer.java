@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Hashtable;
 import java.util.Map.Entry;
 import java.util.Date;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 
 public class MyRenderer implements Renderer
 {
@@ -28,20 +31,71 @@ public class MyRenderer implements Renderer
                             +"}",
         
         fragmentShaderSource = ""
-                            +""
+                            +"precision mediump float;"
                             +""
                             +"void main()"
                             +"{"
-                            +"gl_FragColor = vec4(0.3, 0.2, 0.7, 1.0);"
+                            +"gl_FragColor = vec4(0.3, 0.3, 0.7, 1.0);"
                             +""
                             +""
                             +""
                             +""
                             +"}";
     
+    public void onSurfaceCreated(GL10 unused, EGLConfig config)
+    {
+        Date d = new Date();
+        Log.v(TAG, "\n\n"+ 	d.toGMTString() +"\n=============================================================================");
+        //Log.i(TAG, "MyRenderer.onSurfaceCreated begin");
+        
+        GLES20.glClearColor(0.3f, 0.9f, 0.9f, 1.0f);
+        
+        try
+        {
+            int program = createProgram();
+            
+            int a_position_loc = GLES20.glGetAttribLocation(program, "a_position");
+            
+            float mVerticesData[] = {
+                0.6f, 0.5f, 0.0f,
+                0.3f, 0.5f, 0.0f,
+                -0.9f, -0.5f, 0.0f,
+                0.0f, 0.5f, 0.0f,
+                0.5f, -0.5f, 0.0f,
+                -0.5f, -0.5f, 0.0f
+            };
+            
+            FloatBuffer mVertices = ByteBuffer.allocateDirect(mVerticesData.length * 4)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+            
+            mVertices.put(mVerticesData).position(0);
+            
+            GLES20.glVertexAttribPointer (a_position_loc, 
+                3,//int size, 
+                GLES20.GL_FLOAT,//int type, 
+                false,//boolean normalized, 
+                0,//int stride,
+                mVertices//int offset
+            );
+            
+            GLES20.glEnableVertexAttribArray(a_position_loc);
+            
+            Log.i(TAG, "a_position_loc: "+ a_position_loc);
+        }
+        catch(Exception e)
+        {
+            Log.e(TAG, e.getMessage());
+        }
+        
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        GLES20.glDrawArrays(GLES20.GL_LINES, 2, 4);
+        
+        Log.i(TAG, "GLES20.GL_INVALID_VALUE: "+ GLES20.GL_INVALID_VALUE);
+    }
+    
     public void onDrawFrame(GL10 unused)
     {
-        GLES20.glClear(GL10.GL_COLOR_BUFFER_BIT);
+        
     }
     
     public void onSurfaceChanged(GL10 unused, int width, int height)
@@ -112,40 +166,9 @@ public class MyRenderer implements Renderer
         return program;
     }
     
-    public void onSurfaceCreated(GL10 unused, EGLConfig config)
-    {
-        Date d = new Date();
-        Log.v(TAG, "\n\n"+ 	d.toGMTString() +"\n=============================================================================");
-        //Log.i(TAG, "MyRenderer.onSurfaceCreated begin");
-        
-        try
-        {
-            int program = createProgram();
-            
-            int a_position_loc = GLES20.glGetAttribLocation(program, "a_position");
-            
-            GLES20.glVertexAttribPointer (a_position_loc, 
-                4,//int size, 
-                GLES20.GL_SHORT,//int type, 
-                true,//boolean normalized, 
-                4,//int stride, 
-                0//int offset
-            );
-            
-            Log.i(TAG, "a_position_loc: "+ a_position_loc);
-        }
-        catch(Exception e)
-        {
-            Log.e(TAG, e.getMessage());
-        }
-        
-        GLES20.glClearColor((float)Math.random(), (float)Math.random(), (float)Math.random(), 1.0f);
-        
-        //Log.i(TAG, "MyRenderer.onSurfaceCreated end");
-    }
-    
     private void __logProgramInfo(int program)
     {
+        //Log.i(TAG, "Float.SIZE: "+ Float.SIZE);
         Log.i(TAG, "MyRenderer.__logProgramInfo (program: "+ program +"):");
         
         int params[] = new int[1];
