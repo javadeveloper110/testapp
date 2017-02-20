@@ -19,12 +19,12 @@ public class MyRenderer implements Renderer
         String TAG = "MyRenderer",
         
         vertexShaderSource = "attribute vec4 a_position;"
-                            +""
-                            +""
+                            +"attribute vec4 a_color;"
+                            +"varying vec4 v_color;"
                             +"void main()"
                             +"{"
                             +"gl_Position = a_position;"
-                            +""
+                            +"v_color = a_color;"
                             +""
                             +""
                             +""
@@ -32,10 +32,10 @@ public class MyRenderer implements Renderer
         
         fragmentShaderSource = ""
                             +"precision mediump float;"
-                            +""
+                            +"varying vec4 v_color;"
                             +"void main()"
                             +"{"
-                            +"gl_FragColor = vec4(0.3, 0.3, 0.7, 1.0);"
+                            +"gl_FragColor = v_color;"
                             +""
                             +""
                             +""
@@ -55,14 +55,21 @@ public class MyRenderer implements Renderer
             int program = createProgram();
             
             int a_position_loc = GLES20.glGetAttribLocation(program, "a_position");
+            int a_color_loc = GLES20.glGetAttribLocation(program, "a_color");
             
             float mVerticesData[] = {
-                0.6f, 0.5f, 0.0f,
-                0.3f, 0.5f, 0.0f,
-                -0.9f, -0.5f, 0.0f,
                 0.0f, 0.5f, 0.0f,
+                1.0f, 0.0f, 0.0f,
                 0.5f, -0.5f, 0.0f,
-                -0.5f, -0.5f, 0.0f
+                0.0f, 0.0f, 1.0f,
+                -0.5f, -0.5f, 0.0f,
+                0.0f, 1.0f, 0.0f,
+                0.5f, 0.5f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+                0.0f, -0.5f, 0.0f,
+                0.0f, 0.0f, 1.0f,
+                1.0f, -0.5f, 0.0f,
+                0.0f, 1.0f, 0.0f,
             };
             
             FloatBuffer mVertices = ByteBuffer.allocateDirect(mVerticesData.length * 4)
@@ -70,15 +77,26 @@ public class MyRenderer implements Renderer
             
             mVertices.put(mVerticesData).position(0);
             
-            GLES20.glVertexAttribPointer (a_position_loc, 
+            GLES20.glVertexAttribPointer(a_position_loc, 
                 3,//int size, 
                 GLES20.GL_FLOAT,//int type, 
                 false,//boolean normalized, 
-                0,//int stride,
+                6*4,//int stride,
                 mVertices//int offset
             );
             
+            mVertices.position(3);
+            
+            GLES20.glVertexAttribPointer(a_color_loc, 
+                3,//int size, 
+                GLES20.GL_FLOAT,//int type, 
+                false,//boolean normalized, 
+                6*4,//int stride,
+                mVertices
+            );
+            
             GLES20.glEnableVertexAttribArray(a_position_loc);
+            GLES20.glEnableVertexAttribArray(a_color_loc);
             
             Log.i(TAG, "a_position_loc: "+ a_position_loc);
         }
@@ -88,7 +106,7 @@ public class MyRenderer implements Renderer
         }
         
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-        GLES20.glDrawArrays(GLES20.GL_LINES, 2, 4);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
         
         Log.i(TAG, "GLES20.GL_INVALID_VALUE: "+ GLES20.GL_INVALID_VALUE);
     }
