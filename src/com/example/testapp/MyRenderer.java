@@ -12,19 +12,26 @@ import java.util.Date;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import android.opengl.Matrix;
 
 public class MyRenderer implements Renderer
 {
+    protected
+        float[] viewMatrix = new float[16];
+        float[] projMatrix = new float[16];
+        float[] mMVPMatrix = new float[16];
+        int muMVPMatrixHandle;
+    
     final
         String TAG = "MyRenderer",
         
         vertexShaderSource = "attribute vec4 a_position;"
-                            +"attribute vec4 a_color;"
-                            +"varying vec4 v_color;"
+                            +"uniform mat4 uMVPMatrix;"
+                            +""
                             +"void main()"
                             +"{"
                             +"gl_Position = a_position;"
-                            +"v_color = a_color;"
+                            +""
                             +""
                             +""
                             +""
@@ -32,10 +39,10 @@ public class MyRenderer implements Renderer
         
         fragmentShaderSource = ""
                             +"precision mediump float;"
-                            +"varying vec4 v_color;"
+                            +""
                             +"void main()"
                             +"{"
-                            +"gl_FragColor = v_color;"
+                            +"gl_FragColor = vec4(0.5, 0.9, 0.1, 1.0);"
                             +""
                             +""
                             +""
@@ -48,77 +55,82 @@ public class MyRenderer implements Renderer
         Log.v(TAG, "\n\n"+ 	d.toGMTString() +"\n=============================================================================");
         //Log.i(TAG, "MyRenderer.onSurfaceCreated begin");
         
+        Matrix.setLookAtM(viewMatrix, 0, 0, 0, -1, 0f, 0f, 4f, 0f, 1.0f, 0.0f);
+        
         GLES20.glClearColor(0.3f, 0.9f, 0.9f, 1.0f);
         
         try
         {
             int program = createProgram();
-            
+            final int BYTES_PER_FLOAT = Float.SIZE / 8;
+            int[] vertexBuffers = new int[2];
             int a_position_loc = GLES20.glGetAttribLocation(program, "a_position");
-            int a_color_loc = GLES20.glGetAttribLocation(program, "a_color");
+            muMVPMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix");
             
-            float mVerticesData[] = {
-                0.0f, 0.5f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                0.5f, -0.5f, 0.0f,
-                0.0f, 0.0f, 1.0f,
+            float verticesData[] = {
                 -0.5f, -0.5f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.5f, 0.5f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                0.0f, -0.5f, 0.0f,
-                0.0f, 0.0f, 1.0f,
-                1.0f, -0.5f, 0.0f,
-                0.0f, 1.0f, 0.0f,
+                0.5f, -0.5f, 0.0f,
+                0.0f, 0.5f, 0.0f,
+            };
+            byte indicesData[] = {
+                0, 1, 2,
             };
             
-            FloatBuffer mVertices = ByteBuffer.allocateDirect(mVerticesData.length * 4)
+            FloatBuffer vertices = ByteBuffer.allocateDirect(verticesData.length * BYTES_PER_FLOAT)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
             
-            mVertices.put(mVerticesData).position(0);
+            ByteBuffer indices = ByteBuffer.allocateDirect(indicesData.length)
+                .order(ByteOrder.nativeOrder());
+            
+            vertices.put(verticesData).position(0);
+            indices.put(indicesData).position(0);
+            
+            GLES20.glGenBuffers(vertexBuffers.length, vertexBuffers, 0);
+            
+            GLES20.glBindBuffer (GLES20.GL_ARRAY_BUFFER, vertexBuffers[0]);
+            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, verticesData.length*BYTES_PER_FLOAT, vertices, GLES20.GL_STATIC_DRAW);
+            
+            GLES20.glBindBuffer (GLES20.GL_ELEMENT_ARRAY_BUFFER, vertexBuffers[1]);
+            GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, indicesData.length, indices, GLES20.GL_STATIC_DRAW);
             
             GLES20.glVertexAttribPointer(a_position_loc, 
                 3,//int size, 
                 GLES20.GL_FLOAT,//int type, 
                 false,//boolean normalized, 
-                6*4,//int stride,
-                mVertices//int offset
-            );
-            
-            mVertices.position(3);
-            
-            GLES20.glVertexAttribPointer(a_color_loc, 
-                3,//int size, 
-                GLES20.GL_FLOAT,//int type, 
-                false,//boolean normalized, 
-                6*4,//int stride,
-                mVertices
+                3*BYTES_PER_FLOAT,//int stride,
+                0//int offset
             );
             
             GLES20.glEnableVertexAttribArray(a_position_loc);
-            GLES20.glEnableVertexAttribArray(a_color_loc);
             
-            Log.i(TAG, "a_position_loc: "+ a_position_loc);
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+            //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLES, 3, GLES20.GL_UNSIGNED_BYTE, 0);
         }
         catch(Exception e)
         {
             Log.e(TAG, e.getMessage());
         }
-        
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
-        
-        Log.i(TAG, "GLES20.GL_INVALID_VALUE: "+ GLES20.GL_INVALID_VALUE);
     }
     
     public void onDrawFrame(GL10 unused)
     {
-        
+        // Combine the projection and camera view matrices
+            Matrix.multiplyMM(mMVPMatrix, 0, projMatrix, 0, viewMatrix, 0);
+            
+        // Apply the combined projection and camera view transformations
+            GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
     }
     
+    @Override
     public void onSurfaceChanged(GL10 unused, int width, int height)
     {
         GLES20.glViewport(0, 0, width, height);
+        Log.i(TAG, "MyRenderer.onSurfaceChanged");
+        float ratio = (float) width / height;
+        
+    // create a projection matrix from device screen geometry
+        Matrix.frustumM(projMatrix, 0, -ratio, ratio, -1, 1, 1, 7);
     }
     
     private int loadShader(int type, String shaderSource) throws Exception
