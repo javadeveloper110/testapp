@@ -25,12 +25,13 @@ public class MyRenderer implements Renderer
     final
         String TAG = "MyRenderer",
         
-        vertexShaderSource = "attribute vec4 a_position;"
-                            +"uniform mat4 uMVPMatrix;"
+        vertexShaderSource = "precision mediump float;"
+                            +"attribute vec4 a_position;\n"
+                            +"uniform mat4 u_MVPMatrix;\n"
                             +""
                             +"void main()"
                             +"{"
-                            +"gl_Position = a_position;"
+                            +"gl_Position = u_MVPMatrix*a_position;"
                             +""
                             +""
                             +""
@@ -54,8 +55,20 @@ public class MyRenderer implements Renderer
         Date d = new Date();
         Log.v(TAG, "\n\n"+ 	d.toGMTString() +"\n=============================================================================");
         //Log.i(TAG, "MyRenderer.onSurfaceCreated begin");
-        
-        Matrix.setLookAtM(viewMatrix, 0, 0, 0, -1, 0f, 0f, 4f, 0f, 1.0f, 0.0f);
+         
+        Matrix.setLookAtM(
+            viewMatrix, // rm
+            0,          // rmOffset
+            0,          // eyeX
+            0.0f,          // eyeY
+            -1f,        // eyeZ
+            0f,         // centerX
+            0f,         // centerY
+            0f,         // centerZ
+            0f,         // upX
+            1.0f,       // upY
+            0.0f        // upZ
+        );
         
         GLES20.glClearColor(0.3f, 0.9f, 0.9f, 1.0f);
         
@@ -65,12 +78,13 @@ public class MyRenderer implements Renderer
             final int BYTES_PER_FLOAT = Float.SIZE / 8;
             int[] vertexBuffers = new int[2];
             int a_position_loc = GLES20.glGetAttribLocation(program, "a_position");
-            muMVPMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix");
-            
+            muMVPMatrixHandle = GLES20.glGetUniformLocation(program, "u_MVPMatrix");
+            Log.i(TAG, "muMVPMatrixHandle: "+ muMVPMatrixHandle);
+            Log.i(TAG, "a_position_loc: "+ a_position_loc);
             float verticesData[] = {
-                -0.5f, -0.5f, 0.0f,
-                0.5f, -0.5f, 0.0f,
-                0.0f, 0.5f, 0.0f,
+                -1f, -1f, 0.0f,
+                1f, -1f, 0.0f,
+                0.0f, 1f, 0.0f,
             };
             byte indicesData[] = {
                 0, 1, 2,
@@ -103,9 +117,7 @@ public class MyRenderer implements Renderer
             
             GLES20.glEnableVertexAttribArray(a_position_loc);
             
-            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-            //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
-            GLES20.glDrawElements(GLES20.GL_TRIANGLES, 3, GLES20.GL_UNSIGNED_BYTE, 0);
+            
         }
         catch(Exception e)
         {
@@ -120,6 +132,14 @@ public class MyRenderer implements Renderer
             
         // Apply the combined projection and camera view transformations
             GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
+            
+            /*for(float i: viewMatrix)
+                Log.e(TAG, i+"");
+                Log.e(TAG, "===");*/
+            
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+            //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLES, 3, GLES20.GL_UNSIGNED_BYTE, 0);
     }
     
     @Override
@@ -130,7 +150,16 @@ public class MyRenderer implements Renderer
         float ratio = (float) width / height;
         
     // create a projection matrix from device screen geometry
-        Matrix.frustumM(projMatrix, 0, -ratio, ratio, -1, 1, 1, 7);
+        Matrix.frustumM(
+            projMatrix, // m
+            0,          // offset
+            -ratio,     // left
+            ratio,      // right
+            -1,         // bottom
+            1,          // top
+            1,          // near
+            50           // far
+        );
     }
     
     private int loadShader(int type, String shaderSource) throws Exception
