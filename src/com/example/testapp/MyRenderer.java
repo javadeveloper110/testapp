@@ -20,6 +20,7 @@ public class MyRenderer implements Renderer
         float[] viewMatrix = new float[16];
         float[] projMatrix = new float[16];
         float[] mMVPMatrix = new float[16];
+        float[] cameraPosition = {0f, 0f, -2f, 1f};
         int muMVPMatrixHandle;
     
     final
@@ -60,8 +61,8 @@ public class MyRenderer implements Renderer
             viewMatrix, // rm
             0,          // rmOffset
             0,          // eyeX
-            0.0f,          // eyeY
-            -1f,        // eyeZ
+            0.0f,       // eyeY
+            -2f,        // eyeZ
             0f,         // centerX
             0f,         // centerY
             0f,         // centerZ
@@ -153,10 +154,10 @@ public class MyRenderer implements Renderer
         Matrix.frustumM(
             projMatrix, // m
             0,          // offset
-            -ratio,     // left
-            ratio,      // right
-            -1,         // bottom
-            1,          // top
+            -ratio,     // bottom
+            ratio,      // top
+            -1,         // left
+            1,          // right
             1,          // near
             50           // far
         );
@@ -276,5 +277,55 @@ public class MyRenderer implements Renderer
         Log.i(TAG, "shader info log: "+ GLES20.glGetShaderInfoLog(shader));
         
         Log.i(TAG, "\n\n\n");
+    }
+    
+    public void changeViewPosition(final float x, final float y)
+    {
+        final float
+            angleX = (float)(y * Math.PI / 180),
+            angleY = (float)(x * Math.PI / 180),
+            cosX = (float)Math.cos(angleX),
+            sinX = (float)Math.sin(angleX),
+            cosY = (float)Math.cos(angleY),
+            sinY = (float)Math.sin(angleY);
+        
+        float[]
+            matrixX = {
+                1f, 0f, 0f, 0f,
+                0f, cosX, sinX, 0f,
+                0f, -sinX, cosX, 0f,
+                0f, 0f, 0f, 1f,
+            },
+            matrixY = {
+                cosY, 0f, sinY, 0f,
+                0f, 1f, 0f, 0f,
+                -sinY, 0f, cosY, 0f,
+                0f, 0f, 0f, 1f,
+            },
+            resMatrix = new float[16];
+        
+        Matrix.multiplyMM(resMatrix, 0, matrixY, 0, matrixX, 0);
+        
+        Matrix.multiplyMV(cameraPosition, 
+                0, 
+                resMatrix, 
+                0, 
+                cameraPosition, 
+                0
+        );
+        
+        Matrix.setLookAtM(
+            viewMatrix, // rm
+            0,          // rmOffset
+            cameraPosition[0],          // eyeX
+            cameraPosition[1],       // eyeY
+            cameraPosition[2],        // eyeZ
+            0f,         // centerX
+            0f,         // centerY
+            0f,         // centerZ
+            0f,         // upX
+            1.0f,       // upY
+            0.0f        // upZ
+        );
     }
 }

@@ -5,18 +5,17 @@ import android.app.AlertDialog;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.Toast;
-import android.opengl.GLSurfaceView;
 
 public class MainActivity extends Activity {
     
     private
-        GLSurfaceView glSurfaceView;
+        MyGLSurfaceView glSurfaceView;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        glSurfaceView = new GLSurfaceView(this);
+        glSurfaceView = new MyGLSurfaceView(this);
         
         glSurfaceView.setEGLContextClientVersion(2);
         
