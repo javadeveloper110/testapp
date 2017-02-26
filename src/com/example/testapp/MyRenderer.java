@@ -144,6 +144,7 @@ public class MyRenderer implements Renderer
             
         // Apply the combined projection and camera view transformations
             GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
+            GLES20.glUniformMatrix4fv(u_lightPosHandle, 1, false, cameraPosition, 0);
             
             /*for(float i: viewMatrix)
                 Log.e(TAG, i+"");
