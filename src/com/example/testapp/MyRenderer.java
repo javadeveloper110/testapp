@@ -22,13 +22,16 @@ public class MyRenderer implements Renderer
         float[] mMVPMatrix = new float[16];
         float[] cameraPosition = {0f, 0f, -2f, 1f};
         int muMVPMatrixHandle;
+        int u_lightPosHandle;
     
     final
         String TAG = "MyRenderer",
         
         vertexShaderSource = "precision mediump float;"
                             +"attribute vec4 a_position;\n"
+                            +"attribute vec4 a_normal;\n"
                             +"uniform mat4 u_MVPMatrix;\n"
+                            +"uniform vec4 u_lightPos;\n"
                             +""
                             +"void main()"
                             +"{"
@@ -79,13 +82,14 @@ public class MyRenderer implements Renderer
             final int BYTES_PER_FLOAT = Float.SIZE / 8;
             int[] vertexBuffers = new int[2];
             int a_position_loc = GLES20.glGetAttribLocation(program, "a_position");
+            int a_normal_loc = GLES20.glGetAttribLocation(program, "a_normal");
             muMVPMatrixHandle = GLES20.glGetUniformLocation(program, "u_MVPMatrix");
-            Log.i(TAG, "muMVPMatrixHandle: "+ muMVPMatrixHandle);
-            Log.i(TAG, "a_position_loc: "+ a_position_loc);
+            u_lightPosHandle = GLES20.glGetUniformLocation(program, "u_lightPos");
+            
             float verticesData[] = {
-                -1f, -1f, 0.0f,
-                1f, -1f, 0.0f,
-                0.0f, 1f, 0.0f,
+                -1f, -1f, 0.0f,     -1f, -1f, -1f,
+                1f, -1f, 0.0f,      1f, -1f, -1f,
+                0.0f, 1f, 0.0f,     0.0f, 1f, -1f,
             };
             byte indicesData[] = {
                 0, 1, 2,
@@ -112,8 +116,15 @@ public class MyRenderer implements Renderer
                 3,//int size, 
                 GLES20.GL_FLOAT,//int type, 
                 false,//boolean normalized, 
-                3*BYTES_PER_FLOAT,//int stride,
+                6*BYTES_PER_FLOAT,//int stride,
                 0//int offset
+            );
+            GLES20.glVertexAttribPointer(a_normal_loc, 
+                3,//int size, 
+                GLES20.GL_FLOAT,//int type, 
+                false,//boolean normalized, 
+                6*BYTES_PER_FLOAT,//int stride,
+                3//int offset
             );
             
             GLES20.glEnableVertexAttribArray(a_position_loc);
