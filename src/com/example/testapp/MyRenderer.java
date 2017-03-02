@@ -20,39 +20,57 @@ public class MyRenderer implements Renderer
         float[] viewMatrix = new float[16];
         float[] projMatrix = new float[16];
         float[] mMVPMatrix = new float[16];
-        float[] cameraPosition = {0f, 0f, -2f, 1f};
+        float[] cameraPosition = {0f, 0f, -4f, 1f};
         int muMVPMatrixHandle;
         int u_lightPosHandle;
     
     final
         String TAG = "MyRenderer",
         
-        vertexShaderSource = "precision mediump float;"
+        vertexShaderSource = "precision mediump float;\n"
+                            +"attribute vec3 a_normal;\n"
                             +"attribute vec4 a_position;\n"
-                            +"attribute vec4 a_normal;\n"
                             +"uniform mat4 u_MVPMatrix;\n"
                             +"uniform vec4 u_lightPos;\n"
-                            +""
+                            +"varying vec4 v_color;"
                             +"void main()"
                             +"{"
                             +"gl_Position = u_MVPMatrix*a_position;"
-                            +""
-                            +""
-                            +""
-                            +""
+                            //+"v_color = a_normal;"
+                            +"vec3 normal = normalize(a_normal);"
+                            +"vec3 lightDirection = normalize(vec3(u_lightPos));"
+                            +"vec3 lightColor = vec3(1.0, 1.0, 1.0);"
+                            +"vec3 color = vec3(1.0, 1.0, 1.0);"
+                            +"float nDotL = abs(dot(normal, lightDirection));"
+                            +"vec3 diffuse = lightColor * color * nDotL;"
+                            +"v_color = vec4(diffuse, 1.0);"
                             +"}",
         
-        fragmentShaderSource = ""
-                            +"precision mediump float;"
+        fragmentShaderSource = "precision mediump float;\n"
+                            +"varying vec4 v_color;"
                             +""
                             +"void main()"
                             +"{"
-                            +"gl_FragColor = vec4(0.5, 0.9, 0.1, 1.0);"
+                            +"gl_FragColor = v_color;"
                             +""
                             +""
                             +""
                             +""
                             +"}";
+        
+        
+        final float verticesData[] = {
+            -1f, 1f, -1f,   0f, 0f, -1f,
+            -1f, -1f, -1f,   0f, 0f, -1f,
+            1f, 1f, -1f,   0f, 0f, -1f,
+            1f, -1f, -1f,   0f, 0f, -1f,
+            1f, -1f, 1f,   1f, 0f, 0f,
+        };
+        
+        final byte indicesData[] = {
+            0, 1, 2, 3,
+            4,
+        };
     
     public void onSurfaceCreated(GL10 unused, EGLConfig config)
     {
@@ -65,7 +83,7 @@ public class MyRenderer implements Renderer
             0,          // rmOffset
             0,          // eyeX
             0.0f,       // eyeY
-            -2f,        // eyeZ
+            -4f,        // eyeZ
             0f,         // centerX
             0f,         // centerY
             0f,         // centerZ
@@ -75,25 +93,18 @@ public class MyRenderer implements Renderer
         );
         
         GLES20.glClearColor(0.3f, 0.9f, 0.9f, 1.0f);
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         
         try
         {
             int program = createProgram();
             final int BYTES_PER_FLOAT = Float.SIZE / 8;
             int[] vertexBuffers = new int[2];
-            int a_position_loc = GLES20.glGetAttribLocation(program, "a_position");
             int a_normal_loc = GLES20.glGetAttribLocation(program, "a_normal");
+            int a_position_loc = GLES20.glGetAttribLocation(program, "a_position");
             muMVPMatrixHandle = GLES20.glGetUniformLocation(program, "u_MVPMatrix");
             u_lightPosHandle = GLES20.glGetUniformLocation(program, "u_lightPos");
             
-            float verticesData[] = {
-                -1f, -1f, 0.0f,     -1f, -1f, -1f,
-                1f, -1f, 0.0f,      1f, -1f, -1f,
-                0.0f, 1f, 0.0f,     0.0f, 1f, -1f,
-            };
-            byte indicesData[] = {
-                0, 1, 2,
-            };
             
             FloatBuffer vertices = ByteBuffer.allocateDirect(verticesData.length * BYTES_PER_FLOAT)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -119,17 +130,17 @@ public class MyRenderer implements Renderer
                 6*BYTES_PER_FLOAT,//int stride,
                 0//int offset
             );
+            
             GLES20.glVertexAttribPointer(a_normal_loc, 
                 3,//int size, 
                 GLES20.GL_FLOAT,//int type, 
                 false,//boolean normalized, 
                 6*BYTES_PER_FLOAT,//int stride,
-                3//int offset
+                3*BYTES_PER_FLOAT//int offset
             );
             
             GLES20.glEnableVertexAttribArray(a_position_loc);
-            
-            
+            GLES20.glEnableVertexAttribArray(a_normal_loc);
         }
         catch(Exception e)
         {
@@ -144,15 +155,15 @@ public class MyRenderer implements Renderer
             
         // Apply the combined projection and camera view transformations
             GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
-            GLES20.glUniformMatrix4fv(u_lightPosHandle, 1, false, cameraPosition, 0);
+            GLES20.glUniform4fv(u_lightPosHandle, 1, cameraPosition, 0);
             
             /*for(float i: viewMatrix)
                 Log.e(TAG, i+"");
                 Log.e(TAG, "===");*/
             
-            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
             //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
-            GLES20.glDrawElements(GLES20.GL_TRIANGLES, 3, GLES20.GL_UNSIGNED_BYTE, 0);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, indicesData.length, GLES20.GL_UNSIGNED_BYTE, 0);
     }
     
     @Override
@@ -318,12 +329,12 @@ public class MyRenderer implements Renderer
         
         Matrix.multiplyMM(resMatrix, 0, matrixY, 0, matrixX, 0);
         
-        Matrix.multiplyMV(cameraPosition, 
-                0, 
-                resMatrix, 
-                0, 
-                cameraPosition, 
-                0
+        Matrix.multiplyMV(cameraPosition,
+            0,
+            resMatrix,
+            0,
+            cameraPosition,
+            0
         );
         
         Matrix.setLookAtM(
