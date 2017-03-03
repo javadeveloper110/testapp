@@ -7,10 +7,11 @@ class Cube
     public float[] getVertices()
     {
         float v[] = {
-            -1f,  1f, -1f, 0, 0, -1f,
-            -1f, -1f, -1f, 0, 0, -1f,
-             1f,  1f, -1f, 0, 0, -1f,
-             1f, -1f, -1f, 0, 0, -1f,
+        //  vertex              normal
+            -1f,  1f, -1f,      0, 0, -1f,
+            -1f, -1f, -1f,      0, 0, -1f,
+             1f,  1f, -1f,      0, 0, -1f,
+             1f, -1f, -1f,      0, 0, -1f,
         };
         
         return v;
