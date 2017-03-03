@@ -4,6 +4,7 @@ import android.opengl.GLSurfaceView;
 import android.content.Context;
 import android.view.MotionEvent;
 import android.util.Log;
+import android.view.SurfaceHolder;
 
 class MyGLSurfaceView extends GLSurfaceView
 {
@@ -14,10 +15,24 @@ class MyGLSurfaceView extends GLSurfaceView
         float beginX, beginY;
         int pointerId;
         MyRenderer renderer;
+        Cube objects[];
     
     MyGLSurfaceView(Context context)
     {
         super(context);
+    }
+    
+    public void surfaceCreated(SurfaceHolder holder)
+    {
+        super.surfaceCreated(holder);
+        
+        init();
+    }
+    
+    private void init()
+    {
+        objects = new Cube[1];
+        objects[0] = new Cube();
     }
     
     @Override
