@@ -59,18 +59,8 @@ public class MyRenderer implements Renderer
                             +"}";
         
         
-        final float verticesData[] = {
-            -1f, 1f, -1f,   0f, 0f, -1f,
-            -1f, -1f, -1f,   0f, 0f, -1f,
-            1f, 1f, -1f,   0f, 0f, -1f,
-            1f, -1f, -1f,   0f, 0f, -1f,
-            1f, -1f, 1f,   1f, 0f, 0f,
-        };
-        
-        final byte indicesData[] = {
-            0, 1, 2, 3,
-            4,
-        };
+        final float vertices[];
+        final byte indicesData[];
     
     public void onSurfaceCreated(GL10 unused, EGLConfig config)
     {
@@ -249,6 +239,56 @@ public class MyRenderer implements Renderer
         return program;
     }
     
+    public void changeViewPosition(final float x, final float y)
+    {
+        final float
+            angleX = (float)(y * Math.PI / 180),
+            angleY = (float)(x * Math.PI / 180),
+            cosX = (float)Math.cos(angleX),
+            sinX = (float)Math.sin(angleX),
+            cosY = (float)Math.cos(angleY),
+            sinY = (float)Math.sin(angleY);
+        
+        float[]
+            matrixX = {
+                1f, 0f, 0f, 0f,
+                0f, cosX, sinX, 0f,
+                0f, -sinX, cosX, 0f,
+                0f, 0f, 0f, 1f,
+            },
+            matrixY = {
+                cosY, 0f, sinY, 0f,
+                0f, 1f, 0f, 0f,
+                -sinY, 0f, cosY, 0f,
+                0f, 0f, 0f, 1f,
+            },
+            resMatrix = new float[16];
+        
+        Matrix.multiplyMM(resMatrix, 0, matrixY, 0, matrixX, 0);
+        
+        Matrix.multiplyMV(cameraPosition,
+            0,
+            resMatrix,
+            0,
+            cameraPosition,
+            0
+        );
+        
+        Matrix.setLookAtM(
+            viewMatrix, // rm
+            0,          // rmOffset
+            cameraPosition[0],          // eyeX
+            cameraPosition[1],       // eyeY
+            cameraPosition[2],        // eyeZ
+            0f,         // centerX
+            0f,         // centerY
+            0f,         // centerZ
+            0f,         // upX
+            1.0f,       // upY
+            0.0f        // upZ
+        );
+    }
+    
     private void __logProgramInfo(int program)
     {
         //Log.i(TAG, "Float.SIZE: "+ Float.SIZE);
@@ -300,55 +340,5 @@ public class MyRenderer implements Renderer
         Log.i(TAG, "shader info log: "+ GLES20.glGetShaderInfoLog(shader));
         
         Log.i(TAG, "\n\n\n");
-    }
-    
-    public void changeViewPosition(final float x, final float y)
-    {
-        final float
-            angleX = (float)(y * Math.PI / 180),
-            angleY = (float)(x * Math.PI / 180),
-            cosX = (float)Math.cos(angleX),
-            sinX = (float)Math.sin(angleX),
-            cosY = (float)Math.cos(angleY),
-            sinY = (float)Math.sin(angleY);
-        
-        float[]
-            matrixX = {
-                1f, 0f, 0f, 0f,
-                0f, cosX, sinX, 0f,
-                0f, -sinX, cosX, 0f,
-                0f, 0f, 0f, 1f,
-            },
-            matrixY = {
-                cosY, 0f, sinY, 0f,
-                0f, 1f, 0f, 0f,
-                -sinY, 0f, cosY, 0f,
-                0f, 0f, 0f, 1f,
-            },
-            resMatrix = new float[16];
-        
-        Matrix.multiplyMM(resMatrix, 0, matrixY, 0, matrixX, 0);
-        
-        Matrix.multiplyMV(cameraPosition,
-            0,
-            resMatrix,
-            0,
-            cameraPosition,
-            0
-        );
-        
-        Matrix.setLookAtM(
-            viewMatrix, // rm
-            0,          // rmOffset
-            cameraPosition[0],          // eyeX
-            cameraPosition[1],       // eyeY
-            cameraPosition[2],        // eyeZ
-            0f,         // centerX
-            0f,         // centerY
-            0f,         // centerZ
-            0f,         // upX
-            1.0f,       // upY
-            0.0f        // upZ
-        );
     }
 }

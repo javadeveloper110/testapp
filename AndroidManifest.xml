@@ -3,8 +3,8 @@
     
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
     
-    <application android:label="TestApp">
-        <activity android:name=".MainActivity">
+    <application android:label="Rubix">
+        <activity android:name=".MainActivity" android:screenOrientation="userLandscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

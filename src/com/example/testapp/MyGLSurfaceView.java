@@ -20,14 +20,11 @@ class MyGLSurfaceView extends GLSurfaceView
     MyGLSurfaceView(Context context)
     {
         super(context);
-        Log.i(TAG, "MyGLSurfaceView.constructor");
     }
     
     public void surfaceCreated(SurfaceHolder holder)
     {
         super.surfaceCreated(holder);
-        
-        Log.i(TAG, "MyGLSurfaceView.surfaceCreated");
         
         init();
     }

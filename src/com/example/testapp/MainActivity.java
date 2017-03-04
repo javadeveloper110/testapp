@@ -6,19 +6,21 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.Toast;
 import android.util.Log;
+import android.view.Window;
+import android.view.WindowManager;
 
 public class MainActivity extends Activity {
     final String TAG = "MyRenderer";
     private
         MyGLSurfaceView glSurfaceView;
     
-    private int counter = 0;
-    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        counter++;
-        Log.i(TAG, "MainActivity.onCreate: "+ counter);
+        
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        
         glSurfaceView = new MyGLSurfaceView(this);
         
         glSurfaceView.setEGLContextClientVersion(2);
@@ -43,8 +45,6 @@ public class MainActivity extends Activity {
     protected void onDestroy()
     {
         super.onDestroy();
-        
-        Log.i(TAG, "MainActivity.onDestroy: "+ counter);
     }
     
     @Override
