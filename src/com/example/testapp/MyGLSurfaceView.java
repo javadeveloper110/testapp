@@ -8,8 +8,8 @@ import android.view.SurfaceHolder;
 
 class MyGLSurfaceView extends GLSurfaceView
 {
-    final
-        String TAG = "MyRenderer";
+    final String TAG = "MyRenderer";
+    final View view = new View();
     
     private
         float beginX, beginY;
@@ -20,11 +20,17 @@ class MyGLSurfaceView extends GLSurfaceView
     MyGLSurfaceView(Context context)
     {
         super(context);
+        
+        Log.i(TAG, "MyGLSurfaceView.constructor");
     }
     
     public void surfaceCreated(SurfaceHolder holder)
     {
         super.surfaceCreated(holder);
+        
+        //renderer.setViewMatrix(view.getMatrix(), view.getEyeVec4());
+        
+        Log.i(TAG, "\n\n\n\n\n\n\n\n\nMyGLSurfaceView.surfaceCreated");
         
         init();
     }
@@ -45,10 +51,10 @@ class MyGLSurfaceView extends GLSurfaceView
             break;
             
             case MotionEvent.ACTION_MOVE:
-                renderer.changeViewPosition(
-                    event.getAxisValue(MotionEvent.AXIS_X, pointerId) - beginX,
-                    event.getAxisValue(MotionEvent.AXIS_Y, pointerId) - beginY
-                );
+                view.rotateX(event.getAxisValue(MotionEvent.AXIS_Y, pointerId) - beginY);
+                view.rotateY(event.getAxisValue(MotionEvent.AXIS_X, pointerId) - beginX);
+                
+                renderer.setViewMatrix(view.getMatrix(), view.getEyeVec4());
             break;
             
             case MotionEvent.ACTION_UP:
@@ -70,7 +76,8 @@ class MyGLSurfaceView extends GLSurfaceView
     public void setRenderer(GLSurfaceView.Renderer r)
     {
         super.setRenderer(r);
-        
+        Log.i(TAG, "MyGLSurfaceView.setRenderer");
+        //renderer.setViewMatrix(view.getMatrix(), view.getEyeVec4());
         renderer = (MyRenderer)r;
     }
 }

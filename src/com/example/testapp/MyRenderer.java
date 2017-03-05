@@ -16,34 +16,43 @@ import android.opengl.Matrix;
 
 public class MyRenderer implements Renderer
 {
-    protected
-        float[] viewMatrix = new float[16];
-        float[] projMatrix = new float[16];
-        float[] mMVPMatrix = new float[16];
-        float[] cameraPosition = {0f, 0f, -4f, 1f};
-        int muMVPMatrixHandle;
-        int u_lightPosHandle;
+    //matrix
+    private
+        float[] projectionMatrix = new float[16];
+        float[] MVPMatrix = new float[16];
+        float[] lightPosition = new float[4];
+    
+    //GL program
+        int program;
+    
+    //attribute & uniform pointers
+        int uMVPMatrixPointer;
+        int uLightPositionPointer;
+        int aNormalPointer;
+        int aPositionPointer;
     
     final
         String TAG = "MyRenderer",
         
         vertexShaderSource = "precision mediump float;\n"
-                            +"attribute vec3 a_normal;\n"
-                            +"attribute vec4 a_position;\n"
+                            +"attribute vec3 a_Normal;\n"
+                            +"attribute vec4 a_Position;\n"
                             +"uniform mat4 u_MVPMatrix;\n"
-                            +"uniform vec4 u_lightPos;\n"
+                            +"uniform vec4 u_LightPosition;\n"
                             +"varying vec4 v_color;"
                             +"void main()"
                             +"{"
-                            +"gl_Position = u_MVPMatrix*a_position;"
-                            //+"v_color = a_normal;"
-                            +"vec3 normal = normalize(a_normal);"
-                            +"vec3 lightDirection = normalize(vec3(u_lightPos));"
+                            +"gl_Position = u_MVPMatrix*a_Position;"
+                            //+"gl_Position = a_Position;"
+                            //+"v_color = a_Normal;"
+                            +"vec3 normal = normalize(a_Normal);"
+                            +"vec3 lightDirection = normalize(vec3(u_LightPosition));"
                             +"vec3 lightColor = vec3(1.0, 1.0, 1.0);"
-                            +"vec3 color = vec3(1.0, 1.0, 1.0);"
+                            +"vec3 color = vec3(1.0, 0.5, 1.0);"
                             +"float nDotL = abs(dot(normal, lightDirection));"
                             +"vec3 diffuse = lightColor * color * nDotL;"
-                            +"v_color = vec4(diffuse, 1.0);"
+                            //+"v_color = vec4(diffuse, 1.0);"
+                            +"v_color = vec4(color, 1.0);"
                             +"}",
         
         fragmentShaderSource = "precision mediump float;\n"
@@ -59,61 +68,68 @@ public class MyRenderer implements Renderer
                             +"}";
         
         
-        final float vertices[];
-        final byte indicesData[];
+        //float verticesSrc[];
+        
+        //byte indicesSrc[];
+    
+    MyRenderer()
+    {
+        
+    }
     
     public void onSurfaceCreated(GL10 unused, EGLConfig config)
     {
-        Date d = new Date();
-        Log.v(TAG, "\n\n"+ 	d.toGMTString() +"\n=============================================================================");
-        //Log.i(TAG, "MyRenderer.onSurfaceCreated begin");
-         
-        Matrix.setLookAtM(
-            viewMatrix, // rm
-            0,          // rmOffset
-            0,          // eyeX
-            0.0f,       // eyeY
-            -4f,        // eyeZ
-            0f,         // centerX
-            0f,         // centerY
-            0f,         // centerZ
-            0f,         // upX
-            1.0f,       // upY
-            0.0f        // upZ
-        );
-        
-        GLES20.glClearColor(0.3f, 0.9f, 0.9f, 1.0f);
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+        Log.i(TAG, "MyRenderer.onSurfaceCreated");
         
         try
         {
-            int program = createProgram();
+            program = createProgram();
+            
+            uMVPMatrixPointer = GLES20.glGetUniformLocation(program, "u_MVPMatrix");
+            uLightPositionPointer = GLES20.glGetUniformLocation(program, "u_LightPosition");
+            aNormalPointer = GLES20.glGetAttribLocation(program, "a_Normal");
+            aPositionPointer = GLES20.glGetAttribLocation(program, "a_Position");
+        }
+        catch(Exception e)
+        {
+            Log.e(TAG, e.getMessage());
+        }
+        
             final int BYTES_PER_FLOAT = Float.SIZE / 8;
+            
             int[] vertexBuffers = new int[2];
-            int a_normal_loc = GLES20.glGetAttribLocation(program, "a_normal");
-            int a_position_loc = GLES20.glGetAttribLocation(program, "a_position");
-            muMVPMatrixHandle = GLES20.glGetUniformLocation(program, "u_MVPMatrix");
-            u_lightPosHandle = GLES20.glGetUniformLocation(program, "u_lightPos");
             
+            //verticesSrc = new float[24];
+            //indicesSrc = new float[4];
             
-            FloatBuffer vertices = ByteBuffer.allocateDirect(verticesData.length * BYTES_PER_FLOAT)
+            float[] verticesSrc = {
+                -0.5f,  0.5f, -1f,      0, 0, -1f,
+                -0.5f, -0.5f, -1f,      0, 0, -1f,
+                 0.5f,  0.5f, -1f,      0, 0, -1f,
+                 0.5f, -0.5f, -1f,      0, 0, -1f,
+            };
+            byte[] indicesSrc = {
+                0, 1, 2, 3,
+            };
+            
+            FloatBuffer vertices = ByteBuffer.allocateDirect(verticesSrc.length * BYTES_PER_FLOAT)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
             
-            ByteBuffer indices = ByteBuffer.allocateDirect(indicesData.length)
+            ByteBuffer indices = ByteBuffer.allocateDirect(indicesSrc.length)
                 .order(ByteOrder.nativeOrder());
             
-            vertices.put(verticesData).position(0);
-            indices.put(indicesData).position(0);
+            vertices.put(verticesSrc).position(0);
+            indices.put(indicesSrc).position(0);
             
             GLES20.glGenBuffers(vertexBuffers.length, vertexBuffers, 0);
             
             GLES20.glBindBuffer (GLES20.GL_ARRAY_BUFFER, vertexBuffers[0]);
-            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, verticesData.length*BYTES_PER_FLOAT, vertices, GLES20.GL_STATIC_DRAW);
+            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, verticesSrc.length*BYTES_PER_FLOAT, vertices, GLES20.GL_STATIC_DRAW);
             
             GLES20.glBindBuffer (GLES20.GL_ELEMENT_ARRAY_BUFFER, vertexBuffers[1]);
-            GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, indicesData.length, indices, GLES20.GL_STATIC_DRAW);
+            GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, indicesSrc.length, indices, GLES20.GL_STATIC_DRAW);
             
-            GLES20.glVertexAttribPointer(a_position_loc, 
+            GLES20.glVertexAttribPointer(aPositionPointer, 
                 3,//int size, 
                 GLES20.GL_FLOAT,//int type, 
                 false,//boolean normalized, 
@@ -121,7 +137,7 @@ public class MyRenderer implements Renderer
                 0//int offset
             );
             
-            GLES20.glVertexAttribPointer(a_normal_loc, 
+            GLES20.glVertexAttribPointer(aNormalPointer, 
                 3,//int size, 
                 GLES20.GL_FLOAT,//int type, 
                 false,//boolean normalized, 
@@ -129,43 +145,35 @@ public class MyRenderer implements Renderer
                 3*BYTES_PER_FLOAT//int offset
             );
             
-            GLES20.glEnableVertexAttribArray(a_position_loc);
-            GLES20.glEnableVertexAttribArray(a_normal_loc);
-        }
-        catch(Exception e)
-        {
-            Log.e(TAG, e.getMessage());
-        }
+            GLES20.glEnableVertexAttribArray(aPositionPointer);
+            GLES20.glEnableVertexAttribArray(aNormalPointer);
+            
+            GLES20.glClearColor(0.3f, 0.9f, 0.9f, 1.0f);
+            
+            GLES20.glEnable(GLES20.GL_DEPTH_TEST);
     }
     
     public void onDrawFrame(GL10 unused)
     {
-        // Combine the projection and camera view matrices
-            Matrix.multiplyMM(mMVPMatrix, 0, projMatrix, 0, viewMatrix, 0);
-            
-        // Apply the combined projection and camera view transformations
-            GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
-            GLES20.glUniform4fv(u_lightPosHandle, 1, cameraPosition, 0);
-            
-            /*for(float i: viewMatrix)
-                Log.e(TAG, i+"");
-                Log.e(TAG, "===");*/
-            
-            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-            //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
-            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, indicesData.length, GLES20.GL_UNSIGNED_BYTE, 0);
+    // Apply the combined projection and camera view transformations
+        GLES20.glUniformMatrix4fv(uMVPMatrixPointer, 1, false, MVPMatrix, 0);
+        GLES20.glUniform4fv(uLightPositionPointer, 1, lightPosition, 0);
+        
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+        
+        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 0);
     }
     
     @Override
     public void onSurfaceChanged(GL10 unused, int width, int height)
     {
         GLES20.glViewport(0, 0, width, height);
-        Log.i(TAG, "MyRenderer.onSurfaceChanged");
+        
         float ratio = (float) width / height;
         
     // create a projection matrix from device screen geometry
         Matrix.frustumM(
-            projMatrix, // m
+            projectionMatrix, // m
             0,          // offset
             -ratio,     // bottom
             ratio,      // top
@@ -176,10 +184,16 @@ public class MyRenderer implements Renderer
         );
     }
     
+    public void setViewMatrix(final float[] viewMatrix, final float[] lp)
+    {
+    // Combine the projection and camera view matrices
+        Matrix.multiplyMM(MVPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
+        
+        lightPosition = lp;
+    }
+    
     private int loadShader(int type, String shaderSource) throws Exception
     {
-        //Log.i(TAG, "MyRenderer.loadShader begin");
-        
         String typeStr = type == GLES20.GL_VERTEX_SHADER ? "vertex" : "fragment";
         
         int shader = GLES20.glCreateShader(type);
@@ -198,7 +212,6 @@ public class MyRenderer implements Renderer
         if(params[0] == 0)
             throw new Exception(GLES20.glGetShaderInfoLog(shader));
         
-        //Log.i(TAG, "MyRenderer.loadShader end");
         __logShaderInfo(shader);
         
         return shader;
@@ -237,56 +250,6 @@ public class MyRenderer implements Renderer
         __logProgramInfo(program);
         
         return program;
-    }
-    
-    public void changeViewPosition(final float x, final float y)
-    {
-        final float
-            angleX = (float)(y * Math.PI / 180),
-            angleY = (float)(x * Math.PI / 180),
-            cosX = (float)Math.cos(angleX),
-            sinX = (float)Math.sin(angleX),
-            cosY = (float)Math.cos(angleY),
-            sinY = (float)Math.sin(angleY);
-        
-        float[]
-            matrixX = {
-                1f, 0f, 0f, 0f,
-                0f, cosX, sinX, 0f,
-                0f, -sinX, cosX, 0f,
-                0f, 0f, 0f, 1f,
-            },
-            matrixY = {
-                cosY, 0f, sinY, 0f,
-                0f, 1f, 0f, 0f,
-                -sinY, 0f, cosY, 0f,
-                0f, 0f, 0f, 1f,
-            },
-            resMatrix = new float[16];
-        
-        Matrix.multiplyMM(resMatrix, 0, matrixY, 0, matrixX, 0);
-        
-        Matrix.multiplyMV(cameraPosition,
-            0,
-            resMatrix,
-            0,
-            cameraPosition,
-            0
-        );
-        
-        Matrix.setLookAtM(
-            viewMatrix, // rm
-            0,          // rmOffset
-            cameraPosition[0],          // eyeX
-            cameraPosition[1],       // eyeY
-            cameraPosition[2],        // eyeZ
-            0f,         // centerX
-            0f,         // centerY
-            0f,         // centerZ
-            0f,         // upX
-            1.0f,       // upY
-            0.0f        // upZ
-        );
     }
     
     private void __logProgramInfo(int program)
