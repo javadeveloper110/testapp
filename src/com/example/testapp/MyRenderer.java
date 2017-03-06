@@ -51,8 +51,8 @@ public class MyRenderer implements Renderer
                             +"vec3 color = vec3(1.0, 0.5, 1.0);"
                             +"float nDotL = abs(dot(normal, lightDirection));"
                             +"vec3 diffuse = lightColor * color * nDotL;"
-                            //+"v_color = vec4(diffuse, 1.0);"
-                            +"v_color = vec4(color, 1.0);"
+                            +"v_color = vec4(diffuse + vec3(0.2, 0.2, 0.2), 1.0);"
+                            //+"v_color = vec4(color, 1.0);"
                             +"}",
         
         fragmentShaderSource = "precision mediump float;\n"
@@ -103,13 +103,43 @@ public class MyRenderer implements Renderer
             //indicesSrc = new float[4];
             
             float[] verticesSrc = {
-                -0.5f,  0.5f, -1f,      0, 0, -1f,
-                -0.5f, -0.5f, -1f,      0, 0, -1f,
-                 0.5f,  0.5f, -1f,      0, 0, -1f,
-                 0.5f, -0.5f, -1f,      0, 0, -1f,
+                -0.5f,  0.5f, -0.5f,       0,   0, -1f,
+                -0.5f, -0.5f, -0.5f,       0,   0, -1f,
+                 0.5f,  0.5f, -0.5f,       0,   0, -1f,
+                 0.5f, -0.5f, -0.5f,       0,   0, -1f,
+                 
+                 0.5f,  0.5f, -0.5f,      1f,   0,   0,
+                 0.5f, -0.5f, -0.5f,      1f,   0,   0,
+                 0.5f,  0.5f,  0.5f,      1f,   0,   0,
+                 0.5f, -0.5f,  0.5f,      1f,   0,   0,
+                 
+                 0.5f, -0.5f,  0.5f,       0,   0,  1f,
+                 0.5f,  0.5f,  0.5f,       0,   0,  1f,
+                -0.5f, -0.5f,  0.5f,       0,   0,  1f,
+                -0.5f,  0.5f,  0.5f,       0,   0,  1f,
+                
+                -0.5f, -0.5f,  0.5f,     -1f,   0,   0,
+                -0.5f,  0.5f,  0.5f,     -1f,   0,   0,
+                -0.5f, -0.5f, -0.5f,     -1f,   0,   0,
+                -0.5f,  0.5f, -0.5f,     -1f,   0,   0,
+                
+                 0.5f, -0.5f, -0.5f,       0, -1f,   0,
+                 0.5f, -0.5f,  0.5f,       0, -1f,   0,
+                -0.5f, -0.5f, -0.5f,       0, -1f,   0,
+                -0.5f, -0.5f,  0.5f,       0, -1f,   0,
+                
+                 0.5f,  0.5f, -0.5f,       0,  1f,   0,
+                -0.5f,  0.5f, -0.5f,       0,  1f,   0,
+                 0.5f,  0.5f,  0.5f,       0,  1f,   0,
+                -0.5f,  0.5f,  0.5f,       0,  1f,   0,
             };
             byte[] indicesSrc = {
                 0, 1, 2, 3,
+                4, 5, 6, 7,
+                8, 9, 10, 11,
+                12, 13, 14, 15,
+                16, 17, 18, 19,
+                20, 21, 22, 23,
             };
             
             FloatBuffer vertices = ByteBuffer.allocateDirect(verticesSrc.length * BYTES_PER_FLOAT)
@@ -162,6 +192,11 @@ public class MyRenderer implements Renderer
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         
         GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 0);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 4);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 8);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 12);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 16);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 20);
     }
     
     @Override
