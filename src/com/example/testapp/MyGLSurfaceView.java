@@ -51,8 +51,7 @@ class MyGLSurfaceView extends GLSurfaceView
             break;
             
             case MotionEvent.ACTION_MOVE:
-                view.rotateX(event.getAxisValue(MotionEvent.AXIS_Y, pointerId) - beginY);
-                view.rotateY(event.getAxisValue(MotionEvent.AXIS_X, pointerId) - beginX);
+                view.move(event.getAxisValue(MotionEvent.AXIS_X, pointerId) - beginX, event.getAxisValue(MotionEvent.AXIS_Y, pointerId) - beginY);
                 
                 renderer.setViewMatrix(view.getMatrix(), view.getEyeVec4());
             break;

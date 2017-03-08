@@ -48,7 +48,7 @@ public class MyRenderer implements Renderer
                             +"vec3 normal = normalize(a_Normal);"
                             +"vec3 lightDirection = normalize(vec3(u_LightPosition));"
                             +"vec3 lightColor = vec3(1.0, 1.0, 1.0);"
-                            +"vec3 color = vec3(1.0, 0.5, 1.0);"
+                            +"vec3 color = vec3(1.0, 1.0, 1.0);"
                             +"float nDotL = abs(dot(normal, lightDirection));"
                             +"vec3 diffuse = lightColor * color * nDotL;"
                             +"v_color = vec4(diffuse + vec3(0.2, 0.2, 0.2), 1.0);"
@@ -103,35 +103,35 @@ public class MyRenderer implements Renderer
             //indicesSrc = new float[4];
             
             float[] verticesSrc = {
-                -0.5f,  0.5f, -0.5f,       0,   0, -1f,
-                -0.5f, -0.5f, -0.5f,       0,   0, -1f,
-                 0.5f,  0.5f, -0.5f,       0,   0, -1f,
-                 0.5f, -0.5f, -0.5f,       0,   0, -1f,
+                -2f,  2f, -2f,       0,   0, -1f,
+                -2f, -2f, -2f,       0,   0, -1f,
+                 2f,  2f, -2f,       0,   0, -1f,
+                 2f, -2f, -2f,       0,   0, -1f,
                  
-                 0.5f,  0.5f, -0.5f,      1f,   0,   0,
-                 0.5f, -0.5f, -0.5f,      1f,   0,   0,
-                 0.5f,  0.5f,  0.5f,      1f,   0,   0,
-                 0.5f, -0.5f,  0.5f,      1f,   0,   0,
+                 2f,  2f, -2f,      1f,   0,   0,
+                 2f, -2f, -2f,      1f,   0,   0,
+                 2f,  2f,  2f,      1f,   0,   0,
+                 2f, -2f,  2f,      1f,   0,   0,
                  
-                 0.5f, -0.5f,  0.5f,       0,   0,  1f,
-                 0.5f,  0.5f,  0.5f,       0,   0,  1f,
-                -0.5f, -0.5f,  0.5f,       0,   0,  1f,
-                -0.5f,  0.5f,  0.5f,       0,   0,  1f,
+                 2f, -2f,  2f,       0,   0,  1f,
+                 2f,  2f,  2f,       0,   0,  1f,
+                -2f, -2f,  2f,       0,   0,  1f,
+                -2f,  2f,  2f,       0,   0,  1f,
                 
-                -0.5f, -0.5f,  0.5f,     -1f,   0,   0,
-                -0.5f,  0.5f,  0.5f,     -1f,   0,   0,
-                -0.5f, -0.5f, -0.5f,     -1f,   0,   0,
-                -0.5f,  0.5f, -0.5f,     -1f,   0,   0,
+                -2f, -2f,  2f,     -1f,   0,   0,
+                -2f,  2f,  2f,     -1f,   0,   0,
+                -2f, -2f, -2f,     -1f,   0,   0,
+                -2f,  2f, -2f,     -1f,   0,   0,
                 
-                 0.5f, -0.5f, -0.5f,       0, -1f,   0,
-                 0.5f, -0.5f,  0.5f,       0, -1f,   0,
-                -0.5f, -0.5f, -0.5f,       0, -1f,   0,
-                -0.5f, -0.5f,  0.5f,       0, -1f,   0,
+                 2f, -2f, -2f,       0, -1f,   0,
+                 2f, -2f,  2f,       0, -1f,   0,
+                -2f, -2f, -2f,       0, -1f,   0,
+                -2f, -2f,  2f,       0, -1f,   0,
                 
-                 0.5f,  0.5f, -0.5f,       0,  1f,   0,
-                -0.5f,  0.5f, -0.5f,       0,  1f,   0,
-                 0.5f,  0.5f,  0.5f,       0,  1f,   0,
-                -0.5f,  0.5f,  0.5f,       0,  1f,   0,
+                 2f,  2f, -2f,       0,  1f,   0,
+                -2f,  2f, -2f,       0,  1f,   0,
+                 2f,  2f,  2f,       0,  1f,   0,
+                -2f,  2f,  2f,       0,  1f,   0,
             };
             byte[] indicesSrc = {
                 0, 1, 2, 3,
@@ -207,7 +207,7 @@ public class MyRenderer implements Renderer
         float ratio = (float) width / height;
         
     // create a projection matrix from device screen geometry
-        Matrix.frustumM(
+        /*Matrix.frustumM(
             projectionMatrix, // m
             0,          // offset
             -ratio,     // bottom
@@ -216,7 +216,9 @@ public class MyRenderer implements Renderer
             1,          // right
             1,          // near
             50           // far
-        );
+        );*/
+        
+        Matrix.perspectiveM(projectionMatrix, 0, 30f, ratio, 1f, 50f);
     }
     
     public void setViewMatrix(final float[] viewMatrix, final float[] lp)
