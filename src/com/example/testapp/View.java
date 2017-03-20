@@ -37,9 +37,7 @@ class View
     
     public void move(final float angle_x_grad, final float angle_y_grad)
     {
-        float[]
-            mx = new float[16],
-            my = new float[16];
+        float[] mx = new float[16];
         
         Matrix.multiplyMM(mx, 0, T, 0, getRotateByXMatrix(getAngle(angle_x_grad)), 0);
         Matrix.multiplyMM(T, 0, mx, 0, getRotateByYMatrix(getAngle(angle_y_grad)), 0);
