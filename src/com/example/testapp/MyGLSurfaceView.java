@@ -48,12 +48,22 @@ class MyGLSurfaceView extends GLSurfaceView
         {
             case MotionEvent.ACTION_DOWN:
                 pointerId = event.getPointerId(0);
+                
+                beginX = event.getAxisValue(MotionEvent.AXIS_X, pointerId);
+                beginY = event.getAxisValue(MotionEvent.AXIS_Y, pointerId);
             break;
             
             case MotionEvent.ACTION_MOVE:
-                view.move(event.getAxisValue(MotionEvent.AXIS_X, pointerId) - beginX, event.getAxisValue(MotionEvent.AXIS_Y, pointerId) - beginY);
+                float
+                    currentX = event.getAxisValue(MotionEvent.AXIS_X, pointerId),
+                    currentY = event.getAxisValue(MotionEvent.AXIS_Y, pointerId);
                 
+                view.move(currentY - beginY, currentX - beginX);
+                Log.i(TAG, "x, y: "+ (currentX - beginX) +", "+ (currentY - beginY));
                 renderer.setViewMatrix(view.getMatrix(), view.getEyeVec4());
+                
+                beginX = currentX;
+                beginY = currentY;
             break;
             
             case MotionEvent.ACTION_UP:
@@ -64,9 +74,6 @@ class MyGLSurfaceView extends GLSurfaceView
             default:
                 return false;
         }
-        
-        beginX = event.getAxisValue(MotionEvent.AXIS_X, pointerId);
-        beginY = event.getAxisValue(MotionEvent.AXIS_Y, pointerId);
         
         return true;
     }
