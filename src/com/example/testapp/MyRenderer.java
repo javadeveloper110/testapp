@@ -48,11 +48,10 @@ public class MyRenderer implements Renderer
                             +"vec3 normal = normalize(a_Normal);"
                             +"vec3 lightDirection = normalize(vec3(u_LightPosition));"
                             +"vec3 lightColor = vec3(1.0, 1.0, 1.0);"
-                            +"vec3 color = vec3(1.0, 1.0, 1.0);"
+                            +"vec3 color = vec3(0.5, 0.5, 0.5);"
                             +"float nDotL = abs(dot(normal, lightDirection));"
                             +"vec3 diffuse = lightColor * color * nDotL;"
-                            +"v_color = vec4(diffuse + vec3(0.2, 0.2, 0.2), 1.0);"
-                            //+"v_color = vec4(color, 1.0);"
+                            +"v_color = vec4(diffuse + vec3(0.4, 0.4, 0.4), 1.0);"
                             +"}",
         
         fragmentShaderSource = "precision mediump float;\n"

@@ -58,8 +58,19 @@ class MyGLSurfaceView extends GLSurfaceView
                     currentX = event.getAxisValue(MotionEvent.AXIS_X, pointerId),
                     currentY = event.getAxisValue(MotionEvent.AXIS_Y, pointerId);
                 
-                view.move(currentY - beginY, currentX - beginX);
-                Log.i(TAG, "x, y: "+ (currentX - beginX) +", "+ (currentY - beginY));
+                float rotateX = 0, rotateY = 0;
+                
+                //if(Math.abs(currentY - beginY) > Math.abs(currentX - beginX))
+                //{
+                    rotateX = currentY - beginY;
+                //}
+                //else
+                //{
+                    rotateY = currentX - beginX;
+                //}
+                
+                view.move(rotateX, rotateY);
+                
                 renderer.setViewMatrix(view.getMatrix(), view.getEyeVec4());
                 
                 beginX = currentX;
