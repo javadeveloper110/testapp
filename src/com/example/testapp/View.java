@@ -26,28 +26,26 @@ class View
     
     View()
     {
+        float[] m = getRotateByXMatrix(getAngle(90));
         
+        Log.i(TAG, "a: "+ getAngle(90));
+        Log.i(TAG, ""+ m[0] +"\t"+ m[4] +"\t"+ m[8] +"\t"+ m[12] +"\t");
+        Log.i(TAG, ""+ m[1] +"\t"+ m[5] +"\t"+ m[9] +"\t"+ m[13] +"\t");
+        Log.i(TAG, ""+ m[2] +"\t"+ m[6] +"\t"+ m[10] +"\t"+ m[14] +"\t");
+        Log.i(TAG, ""+ m[3] +"\t"+ m[7] +"\t"+ m[11] +"\t"+ m[15] +"\t");
     }
     
     public void move(final float angle_x_grad, final float angle_y_grad)
     {
         float[]
             mx = new float[16],
-            my = new float[16],
-            eyeX = new float[4],
-            upX = new float[4];
+            my = new float[16];
         
-    //поворот по х
         Matrix.multiplyMM(mx, 0, T, 0, getRotateByXMatrix(getAngle(angle_x_grad)), 0);
-        T = mx;
-        Matrix.multiplyMV(eyeX, 0, mx, 0, eye, 0);
-        Matrix.multiplyMV(upX, 0, mx, 0, up, 0);
+        Matrix.multiplyMM(T, 0, mx, 0, getRotateByYMatrix(getAngle(angle_y_grad)), 0);
         
-    //поворот по у
-        Matrix.multiplyMM(my, 0, T, 0, getRotateByYMatrix(getAngle(angle_y_grad)), 0);
-        T = my;
-        Matrix.multiplyMV(_eye, 0, my, 0, eye, 0);
-        Matrix.multiplyMV(_up, 0, my, 0, up, 0);
+        Matrix.multiplyMV(_eye, 0, T, 0, eye, 0);
+        Matrix.multiplyMV(_up, 0, T, 0, up, 0);
     }
     
     public float[] getRotateByXMatrix(final float angle_rad)
