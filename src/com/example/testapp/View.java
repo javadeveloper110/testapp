@@ -22,17 +22,11 @@ class View
                 0,0,0,1f,
             };
     
-    final String TAG = "MyRenderer";
+    //final String TAG = "MyRenderer";
     
     View()
     {
-        float[] m = getRotateByXMatrix(getAngle(90));
         
-        Log.i(TAG, "a: "+ getAngle(90));
-        Log.i(TAG, ""+ m[0] +"\t"+ m[4] +"\t"+ m[8] +"\t"+ m[12] +"\t");
-        Log.i(TAG, ""+ m[1] +"\t"+ m[5] +"\t"+ m[9] +"\t"+ m[13] +"\t");
-        Log.i(TAG, ""+ m[2] +"\t"+ m[6] +"\t"+ m[10] +"\t"+ m[14] +"\t");
-        Log.i(TAG, ""+ m[3] +"\t"+ m[7] +"\t"+ m[11] +"\t"+ m[15] +"\t");
     }
     
     public void move(final float angle_x_grad, final float angle_y_grad)
