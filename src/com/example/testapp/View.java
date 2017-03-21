@@ -11,10 +11,6 @@ class View
             center[] = {0f, 0f, 0f, 1f},
             up[] = {0f, 1f, 0f, 1f},
             
-            _eye[] = new float[4],
-            _center[] = new float[4],
-            _up[] = new float[4],
-            
             T[] = {
                 1f,0,0,0,
                 0,1f,0,0,
@@ -35,9 +31,6 @@ class View
         
         Matrix.multiplyMM(mx, 0, T, 0, getRotateByXMatrix(getAngle(angle_x_grad)), 0);
         Matrix.multiplyMM(T, 0, mx, 0, getRotateByYMatrix(getAngle(angle_y_grad)), 0);
-        
-        Matrix.multiplyMV(_eye, 0, T, 0, eye, 0);
-        Matrix.multiplyMV(_up, 0, T, 0, up, 0);
     }
     
     public float[] getRotateByXMatrix(final float angle_rad)
@@ -72,28 +65,38 @@ class View
     
     public float[] getMatrix()
     {
-        float[] matrix = new float[16];
+        float[]
+            m = new float[16],
+            e = new float[4],
+            u = new float[4];
+        
+        Matrix.multiplyMV(e, 0, T, 0, eye, 0);
+        Matrix.multiplyMV(u, 0, T, 0, up, 0);
         
         Matrix.setLookAtM(
-            matrix,      // rm
+            m,      // rm
             0,           // rmOffset
-            _eye[0],     // eyeX
-            _eye[1],     // eyeY
-            _eye[2],     // eyeZ
+            e[0],     // eyeX
+            e[1],     // eyeY
+            e[2],     // eyeZ
             center[0],   // centerX
             center[1],   // centerY
             center[2],   // centerZ
-            _up[0],      // upX
-            _up[1],      // upY
-            _up[2]       // upZ
+            u[0],      // upX
+            u[1],      // upY
+            u[2]       // upZ
         );
         
-        return matrix;
+        return m;
     }
     
     public float[] getEyeVec4()
     {
-        return _eye;
+        float[] e = new float[4];
+        
+        Matrix.multiplyMV(e, 0, T, 0, eye, 0);
+        
+        return e;
     }
     
     private float getAngle(final float v)

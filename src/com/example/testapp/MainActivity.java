@@ -17,7 +17,7 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+        Log.i(TAG, "MainActivity.onCreate");
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         
@@ -37,7 +37,7 @@ public class MainActivity extends Activity {
     protected void onPause()
     {
         super.onPause();
-        
+        Log.i(TAG, "MainActivity.onPause");
         glSurfaceView.onPause();
     }
     
@@ -45,13 +45,14 @@ public class MainActivity extends Activity {
     protected void onDestroy()
     {
         super.onDestroy();
+        Log.i(TAG, "MainActivity.onDestroy");
     }
     
     @Override
     protected void onResume()
     {
         super.onResume();
-        
+        Log.i(TAG, "MainActivity.onResume");
         glSurfaceView.onResume();
     }
 }

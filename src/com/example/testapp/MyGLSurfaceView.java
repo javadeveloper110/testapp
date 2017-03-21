@@ -56,20 +56,12 @@ class MyGLSurfaceView extends GLSurfaceView
             case MotionEvent.ACTION_MOVE:
                 float
                     currentX = event.getAxisValue(MotionEvent.AXIS_X, pointerId),
-                    currentY = event.getAxisValue(MotionEvent.AXIS_Y, pointerId);
+                    currentY = event.getAxisValue(MotionEvent.AXIS_Y, pointerId),
+                    rotateX = currentY - beginY,
+                    rotateY = currentX - beginX,
+                    k = 0.3f;
                 
-                float rotateX = 0, rotateY = 0;
-                
-                //if(Math.abs(currentY - beginY) > Math.abs(currentX - beginX))
-                //{
-                    rotateX = currentY - beginY;
-                //}
-                //else
-                //{
-                    rotateY = currentX - beginX;
-                //}
-                
-                view.move(rotateX, rotateY);
+                view.move(rotateX*k, rotateY*k);
                 
                 renderer.setViewMatrix(view.getMatrix(), view.getEyeVec4());
                 

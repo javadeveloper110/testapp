@@ -248,7 +248,7 @@ public class MyRenderer implements Renderer
         if(params[0] == 0)
             throw new Exception(GLES20.glGetShaderInfoLog(shader));
         
-        __logShaderInfo(shader);
+        //__logShaderInfo(shader);
         
         return shader;
     }
@@ -283,7 +283,7 @@ public class MyRenderer implements Renderer
         
         GLES20.glUseProgram(program);
         
-        __logProgramInfo(program);
+        //__logProgramInfo(program);
         
         return program;
     }
