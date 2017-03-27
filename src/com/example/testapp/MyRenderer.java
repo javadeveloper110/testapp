@@ -283,7 +283,7 @@ public class MyRenderer implements Renderer
         
         GLES20.glUseProgram(program);
         
-        //__logProgramInfo(program);
+        __logProgramInfo(program);
         
         return program;
     }
@@ -313,6 +313,9 @@ public class MyRenderer implements Renderer
         }
         
         Log.i(TAG, "program info log: "+ GLES20.glGetProgramInfoLog(program));
+        
+        GLES20.glGetIntegerv(GLES20.GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, params, 0);
+        Log.i(TAG, "GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS: "+ params[0]);
         
         Log.i(TAG, "\n\n\n");
     }
