@@ -9,19 +9,21 @@ import java.util.Map;
 import java.util.Hashtable;
 import java.util.Map.Entry;
 import java.util.Date;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
 import java.nio.FloatBuffer;
 import android.opengl.Matrix;
 
 public class MyRenderer implements Renderer
 {
-    //matrix
-    private
-        float[] projectionMatrix = new float[16];
-        float[] MVPMatrix = new float[16];
-        float[] lightPosition = new float[4];
-    
+    protected Cube[] objects;
+    protected final Camera camera = new Camera();
     //GL program
         int program;
     
@@ -35,45 +37,54 @@ public class MyRenderer implements Renderer
         String TAG = "MyRenderer",
         
         vertexShaderSource = "precision mediump float;\n"
-                            +"attribute vec3 a_Normal;\n"
-                            +"attribute vec4 a_Position;\n"
-                            +"uniform mat4 u_MVPMatrix;\n"
-                            +"uniform vec4 u_LightPosition;\n"
-                            +"varying vec4 v_color;"
-                            +"void main()"
-                            +"{"
-                            +"gl_Position = u_MVPMatrix*a_Position;"
-                            //+"gl_Position = a_Position;"
-                            //+"v_color = a_Normal;"
-                            +"vec3 normal = normalize(a_Normal);"
-                            +"vec3 lightDirection = normalize(vec3(u_LightPosition));"
-                            +"vec3 lightColor = vec3(1.0, 1.0, 1.0);"
-                            +"vec3 color = vec3(0.7, 0.7, 0.7);"
-                            +"float nDotL = abs(dot(normal, lightDirection));"
-                            +"vec3 diffuse = lightColor * color * nDotL;"
-                            +"v_color = vec4(diffuse + vec3(0.4, 0.4, 0.4), 1.0);"
-                            +"}",
+                           + "attribute vec3 a_Normal;\n"
+                           + "attribute vec4 a_Position;\n"
+                           + "uniform mat4 u_MVPMatrix;\n"
+                           + "uniform vec4 u_LightPosition;\n"
+                           + "varying vec4 v_color;"
+                           + "void main()"
+                           + "{"
+                           + "gl_Position = u_MVPMatrix*a_Position;"
+                           + "vec3 normal = normalize(a_Normal);"
+                           + "vec3 lightDirection = normalize(vec3(u_LightPosition));"
+                           + "vec3 lightColor = vec3(1.0, 1.0, 1.0);"
+                           + "vec3 color = vec3(0.7, 0.7, 0.7);"
+                           + "float nDotL = abs(dot(normal, lightDirection));"
+                           + "vec3 diffuse = lightColor * color * nDotL;"
+                           + "v_color = vec4(diffuse + vec3(0.4, 0.4, 0.4), 1.0);"
+                           + "}",
         
         fragmentShaderSource = "precision mediump float;\n"
-                            +"varying vec4 v_color;"
-                            +""
-                            +"void main()"
-                            +"{"
-                            +"gl_FragColor = v_color;"
-                            +""
-                            +""
-                            +""
-                            +""
-                            +"}";
-        
-        
-        //float verticesSrc[];
-        
-        //byte indicesSrc[];
+                           + "varying vec4 v_color;"
+                           + ""
+                           + "void main()"
+                           + "{"
+                           + "gl_FragColor = v_color;"
+                           + ""
+                           + ""
+                           + ""
+                           + ""
+                           + "}";
     
     MyRenderer()
     {
+        init();
+    }
+    
+    protected void init()
+    {
+        objects = new Cube[Cube.count()];
         
+        for(int i = 0; i < objects.length; i++)
+            objects[i] = new Cube(i);
+        
+        camera.rotateAroundCenter(0, -25);
+        camera.rotateAroundCenter(25, 0);
+    }
+    
+    public Camera getCamera()
+    {
+        return camera;
     }
     
     public void onSurfaceCreated(GL10 unused, EGLConfig config)
@@ -88,114 +99,108 @@ public class MyRenderer implements Renderer
             uLightPositionPointer = GLES20.glGetUniformLocation(program, "u_LightPosition");
             aNormalPointer = GLES20.glGetAttribLocation(program, "a_Normal");
             aPositionPointer = GLES20.glGetAttribLocation(program, "a_Position");
-        }
-        catch(Exception e)
-        {
-            Log.e(TAG, e.getMessage());
-        }
-        
+            
             final int BYTES_PER_FLOAT = Float.SIZE / 8;
+            
+            final int VERTICES_LENGTH = objects.length * Cube.getVerticesLegth();
+            final int INDICES_LENGTH = objects.length * Cube.getIndicesLegth();
+            
+            final int VERTICES_SIZE = VERTICES_LENGTH * BYTES_PER_FLOAT;
+            final int INDICES_SIZE = INDICES_LENGTH * Cube.BYTES_PER_INDEX;
+            
+            FloatBuffer vertices = ByteBuffer.allocateDirect(VERTICES_SIZE)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer();
+            
+            ShortBuffer indices = ByteBuffer.allocateDirect(INDICES_SIZE)
+                .order(ByteOrder.nativeOrder())
+                .asShortBuffer();
+            
+            for(int i = 0; i < objects.length; i++)
+            {
+                vertices
+                    .put(objects[i].getVertices())
+                    .position((i + 1) * Cube.getVerticesLegth());
+                
+                indices
+                    .put(objects[i].getIndices())
+                    .position((i+1) * Cube.getIndicesLegth());
+            }
+            
+            vertices.position(0);
+            indices.position(0);
             
             int[] vertexBuffers = new int[2];
             
-            //verticesSrc = new float[24];
-            //indicesSrc = new float[4];
-            
-            float[] verticesSrc = {
-                -2f,  2f, -2f,       0,   0, -1f,
-                -2f, -2f, -2f,       0,   0, -1f,
-                 2f,  2f, -2f,       0,   0, -1f,
-                 2f, -2f, -2f,       0,   0, -1f,
-                 
-                 2f,  2f, -2f,      1f,   0,   0,
-                 2f, -2f, -2f,      1f,   0,   0,
-                 2f,  2f,  2f,      1f,   0,   0,
-                 2f, -2f,  2f,      1f,   0,   0,
-                 
-                 2f, -2f,  2f,       0,   0,  1f,
-                 2f,  2f,  2f,       0,   0,  1f,
-                -2f, -2f,  2f,       0,   0,  1f,
-                -2f,  2f,  2f,       0,   0,  1f,
-                
-                -2f, -2f,  2f,     -1f,   0,   0,
-                -2f,  2f,  2f,     -1f,   0,   0,
-                -2f, -2f, -2f,     -1f,   0,   0,
-                -2f,  2f, -2f,     -1f,   0,   0,
-                
-                 2f, -2f, -2f,       0, -1f,   0,
-                 2f, -2f,  2f,       0, -1f,   0,
-                -2f, -2f, -2f,       0, -1f,   0,
-                -2f, -2f,  2f,       0, -1f,   0,
-                
-                 2f,  2f, -2f,       0,  1f,   0,
-                -2f,  2f, -2f,       0,  1f,   0,
-                 2f,  2f,  2f,       0,  1f,   0,
-                -2f,  2f,  2f,       0,  1f,   0,
-            };
-            byte[] indicesSrc = {
-                0, 1, 2, 3,
-                4, 5, 6, 7,
-                8, 9, 10, 11,
-                12, 13, 14, 15,
-                16, 17, 18, 19,
-                20, 21, 22, 23,
-            };
-            
-            FloatBuffer vertices = ByteBuffer.allocateDirect(verticesSrc.length * BYTES_PER_FLOAT)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
-            
-            ByteBuffer indices = ByteBuffer.allocateDirect(indicesSrc.length)
-                .order(ByteOrder.nativeOrder());
-            
-            vertices.put(verticesSrc).position(0);
-            indices.put(indicesSrc).position(0);
-            
             GLES20.glGenBuffers(vertexBuffers.length, vertexBuffers, 0);
             
-            GLES20.glBindBuffer (GLES20.GL_ARRAY_BUFFER, vertexBuffers[0]);
-            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, verticesSrc.length*BYTES_PER_FLOAT, vertices, GLES20.GL_STATIC_DRAW);
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBuffers[0]);
+            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, VERTICES_SIZE, vertices, GLES20.GL_STATIC_DRAW);
             
-            GLES20.glBindBuffer (GLES20.GL_ELEMENT_ARRAY_BUFFER, vertexBuffers[1]);
-            GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, indicesSrc.length, indices, GLES20.GL_STATIC_DRAW);
+            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, vertexBuffers[1]);
+            GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, INDICES_SIZE, indices, GLES20.GL_STATIC_DRAW);
             
             GLES20.glVertexAttribPointer(aPositionPointer, 
-                3,//int size, 
-                GLES20.GL_FLOAT,//int type, 
-                false,//boolean normalized, 
+                3,//int size,
+                GLES20.GL_FLOAT,//int type,
+                false,//boolean normalized,
                 6*BYTES_PER_FLOAT,//int stride,
                 0//int offset
             );
             
             GLES20.glVertexAttribPointer(aNormalPointer, 
-                3,//int size, 
-                GLES20.GL_FLOAT,//int type, 
-                false,//boolean normalized, 
+                3,//int size,
+                GLES20.GL_FLOAT,//int type,
+                false,//boolean normalized,
                 6*BYTES_PER_FLOAT,//int stride,
                 3*BYTES_PER_FLOAT//int offset
             );
             
             GLES20.glEnableVertexAttribArray(aPositionPointer);
+            
             GLES20.glEnableVertexAttribArray(aNormalPointer);
             
             GLES20.glClearColor(0.3f, 0.9f, 0.9f, 1.0f);
             
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+        }
+        catch(Exception e)
+        {
+            Log.e(TAG, e.getMessage());
+        }
     }
     
+    @Override
     public void onDrawFrame(GL10 unused)
     {
-    // Apply the combined projection and camera view transformations
-        GLES20.glUniformMatrix4fv(uMVPMatrixPointer, 1, false, MVPMatrix, 0);
-        GLES20.glUniform4fv(uLightPositionPointer, 1, lightPosition, 0);
-        
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         
-        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 0);
-        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 4);
-        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 8);
-        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 12);
-        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 16);
-        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, 4, GLES20.GL_UNSIGNED_BYTE, 20);
+        GLES20.glUniform4fv(uLightPositionPointer, 1, camera.getEyeVec4(), 0);
+        
+        final int count = 4;
+        int offset_step = count * Cube.BYTES_PER_INDEX;
+        int offset = -offset_step;
+        
+        for(Cube cube : objects)
+        {
+            GLES20.glUniformMatrix4fv(uMVPMatrixPointer, 1, false, getMVPMatrix(cube), 0);
+            
+            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
+        }
+    }
+    
+    protected float[] getMVPMatrix(final Cube cube)
+    {
+        float[] mvp = new float[16];
+        
+        Matrix.multiplyMM(mvp, 0, camera.getVPMatrix(), 0, cube.getMatrix(), 0);
+        
+        return mvp;
     }
     
     @Override
@@ -203,29 +208,7 @@ public class MyRenderer implements Renderer
     {
         GLES20.glViewport(0, 0, width, height);
         
-        float ratio = (float) width / height;
-        
-    // create a projection matrix from device screen geometry
-        /*Matrix.frustumM(
-            projectionMatrix, // m
-            0,          // offset
-            -ratio,     // bottom
-            ratio,      // top
-            -1,         // left
-            1,          // right
-            1,          // near
-            50           // far
-        );*/
-        
-        Matrix.perspectiveM(projectionMatrix, 0, 30f, ratio, 1f, 50f);
-    }
-    
-    public void setViewMatrix(final float[] viewMatrix, final float[] lp)
-    {
-    // Combine the projection and camera view matrices
-        Matrix.multiplyMM(MVPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
-        
-        lightPosition = lp;
+        camera.setSize(width, height);
     }
     
     private int loadShader(int type, String shaderSource) throws Exception
@@ -283,7 +266,7 @@ public class MyRenderer implements Renderer
         
         GLES20.glUseProgram(program);
         
-        __logProgramInfo(program);
+        //__logProgramInfo(program);
         
         return program;
     }
@@ -342,5 +325,25 @@ public class MyRenderer implements Renderer
         Log.i(TAG, "shader info log: "+ GLES20.glGetShaderInfoLog(shader));
         
         Log.i(TAG, "\n\n\n");
+    }
+    
+    private void logMatrix(float[] matrix)
+    {
+        int j = 0;
+        String str = "";
+        
+        for(int i = 0; i < matrix.length; i++)
+        {
+            j++;
+            
+            str += matrix[i] +"\t";
+            
+            if(j % 4 == 0)
+                str += "\n";
+        }
+        
+        str += "=============================";
+        
+        Log.i(TAG, str);
     }
 }

@@ -8,14 +8,12 @@ import android.view.SurfaceHolder;
 
 class MyGLSurfaceView extends GLSurfaceView
 {
-    final String TAG = "MyRenderer";
-    final View view = new View();
+    final String TAG   = "MyRenderer";
     
     private
         float beginX, beginY;
         int pointerId;
         MyRenderer renderer;
-        Cube objects[];
     
     MyGLSurfaceView(Context context)
     {
@@ -28,17 +26,7 @@ class MyGLSurfaceView extends GLSurfaceView
     {
         super.surfaceCreated(holder);
         
-        //renderer.setViewMatrix(view.getMatrix(), view.getEyeVec4());
-        
-        Log.i(TAG, "\n\n\n\n\n\n\n\n\nMyGLSurfaceView.surfaceCreated");
-        
-        init();
-    }
-    
-    private void init()
-    {
-        objects = new Cube[1];
-        objects[0] = new Cube();
+        Log.i(TAG, "MyGLSurfaceView.surfaceCreated");
     }
     
     @Override
@@ -61,9 +49,7 @@ class MyGLSurfaceView extends GLSurfaceView
                     rotateY = currentX - beginX,
                     k = 0.3f;
                 
-                view.move(rotateX*k, rotateY*k);
-                
-                renderer.setViewMatrix(view.getMatrix(), view.getEyeVec4());
+                renderer.getCamera().rotateAroundCenter(rotateX*k, rotateY*k);
                 
                 beginX = currentX;
                 beginY = currentY;
@@ -86,7 +72,6 @@ class MyGLSurfaceView extends GLSurfaceView
     {
         super.setRenderer(r);
         Log.i(TAG, "MyGLSurfaceView.setRenderer");
-        //renderer.setViewMatrix(view.getMatrix(), view.getEyeVec4());
         renderer = (MyRenderer)r;
     }
 }
