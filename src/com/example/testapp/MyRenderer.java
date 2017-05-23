@@ -32,6 +32,8 @@ public class MyRenderer implements Renderer
         int uLightPositionPointer;
         int aNormalPointer;
         int aPositionPointer;
+        
+        float _cacheVPMatrix[] = new float[16];
     
     final
         String TAG = "MyRenderer",
@@ -181,6 +183,8 @@ public class MyRenderer implements Renderer
         int offset_step = count * Cube.BYTES_PER_INDEX;
         int offset = -offset_step;
         
+        cacheVPMatrix();
+        
         for(Cube cube : objects)
         {
             GLES20.glUniformMatrix4fv(uMVPMatrixPointer, 1, false, getMVPMatrix(cube), 0);
@@ -194,11 +198,16 @@ public class MyRenderer implements Renderer
         }
     }
     
+    protected void cacheVPMatrix()
+    {
+        _cacheVPMatrix = camera.getVPMatrix().clone();
+    }
+    
     protected float[] getMVPMatrix(final Cube cube)
     {
         float[] mvp = new float[16];
         
-        Matrix.multiplyMM(mvp, 0, camera.getVPMatrix(), 0, cube.getMatrix(), 0);
+        Matrix.multiplyMM(mvp, 0, _cacheVPMatrix, 0, cube.getMatrix(), 0);
         
         return mvp;
     }
