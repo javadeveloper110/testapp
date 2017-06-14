@@ -3,6 +3,11 @@
     
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
     
+    <bitmap
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:src="@drawable/tex1"
+    />
+    
     <application android:label="Rubix">
         <activity
             android:name=".MainActivity"

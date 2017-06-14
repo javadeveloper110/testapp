@@ -4,78 +4,61 @@ import android.opengl.GLSurfaceView.Renderer;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import android.opengl.GLES20;
+import android.opengl.GLUtils;
 import android.util.Log;
 import java.util.Map;
 import java.util.Hashtable;
 import java.util.Map.Entry;
 import java.util.Date;
 
+import java.io.ByteArrayOutputStream;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.nio.FloatBuffer;
 import android.opengl.Matrix;
+import android.content.res.Resources;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 
 public class MyRenderer implements Renderer
 {
-    protected Cube[] objects;
+    protected Context context;
+    protected final RubiksCube Rubix;
     protected final Camera camera = new Camera();
     //GL program
-        int program;
+        int mainProgram;
+        int touchProgram;
+    
+    //framebuffers
+        int[] framebuffers = new int[1];
     
     //attribute & uniform pointers
         int uMVPMatrixPointer;
         int uLightPositionPointer;
         int aNormalPointer;
         int aPositionPointer;
+        int aTexCoordPointer;
+        int sTexturePointer;
+        int aColorPointer;
         
         float _cacheVPMatrix[] = new float[16];
     
-    final
-        String TAG = "MyRenderer",
-        
-        vertexShaderSource = "precision mediump float;\n"
-                           + "attribute vec3 a_Normal;\n"
-                           + "attribute vec4 a_Position;\n"
-                           + "uniform mat4 u_MVPMatrix;\n"
-                           + "uniform vec4 u_LightPosition;\n"
-                           + "varying vec4 v_color;"
-                           + "void main()"
-                           + "{"
-                           + "gl_Position = u_MVPMatrix*a_Position;"
-                           + "vec3 normal = normalize(a_Normal);"
-                           + "vec3 lightDirection = normalize(vec3(u_LightPosition));"
-                           + "vec3 lightColor = vec3(1.0, 1.0, 1.0);"
-                           + "vec3 color = vec3(0.7, 0.7, 0.7);"
-                           + "float nDotL = abs(dot(normal, lightDirection));"
-                           + "vec3 diffuse = lightColor * color * nDotL;"
-                           + "v_color = vec4(diffuse + vec3(0.4, 0.4, 0.4), 1.0);"
-                           + "}",
-        
-        fragmentShaderSource = "precision mediump float;\n"
-                           + "varying vec4 v_color;"
-                           + ""
-                           + "void main()"
-                           + "{"
-                           + "gl_FragColor = v_color;"
-                           + ""
-                           + ""
-                           + ""
-                           + ""
-                           + "}";
+    final String TAG = "MyRenderer";
     
-    MyRenderer()
+    MyRenderer(Context c)
     {
+        context = c;
+        
+        Rubix = new RubiksCube();
+        
         init();
     }
     
     protected void init()
     {
-        objects = new Cube[Cube.count()];
-        
-        for(int i = 0; i < objects.length; i++)
-            objects[i] = new Cube(i);
-        
         camera.rotateAroundCenter(0, -25);
         camera.rotateAroundCenter(25, 0);
     }
@@ -91,76 +74,25 @@ public class MyRenderer implements Renderer
         
         try
         {
-            program = createProgram();
+            mainProgram = createProgram(Shader.MAIN_VERTEX_SHADER_SRC, Shader.MAIN_FRAGMENT_SHADER_SRC);
+            touchProgram = createProgram(Shader.TOUCH_VERTEX_SHADER_SRC, Shader.TOUCH_FRAGMENT_SHADER_SRC);
             
-            uMVPMatrixPointer = GLES20.glGetUniformLocation(program, "u_MVPMatrix");
-            uLightPositionPointer = GLES20.glGetUniformLocation(program, "u_LightPosition");
-            aNormalPointer = GLES20.glGetAttribLocation(program, "a_Normal");
-            aPositionPointer = GLES20.glGetAttribLocation(program, "a_Position");
+            uMVPMatrixPointer = GLES20.glGetUniformLocation(mainProgram, "u_MVPMatrix");
+            sTexturePointer = GLES20.glGetUniformLocation(mainProgram, "s_texture");
+            uLightPositionPointer = GLES20.glGetUniformLocation(mainProgram, "u_lightPosition");
+            aNormalPointer = GLES20.glGetAttribLocation(mainProgram, "a_normal");
+            aPositionPointer = GLES20.glGetAttribLocation(mainProgram, "a_position");
+            aTexCoordPointer = GLES20.glGetAttribLocation(mainProgram, "a_texCoord");
+            aColorPointer = GLES20.glGetAttribLocation(touchProgram, "a_color");
             
-            final int BYTES_PER_FLOAT = Float.SIZE / 8;
-            
-            final int VERTICES_LENGTH = objects.length * Cube.getVerticesLegth();
-            final int INDICES_LENGTH = objects.length * Cube.getIndicesLegth();
-            
-            final int VERTICES_SIZE = VERTICES_LENGTH * BYTES_PER_FLOAT;
-            final int INDICES_SIZE = INDICES_LENGTH * Cube.BYTES_PER_INDEX;
-            
-            FloatBuffer vertices = ByteBuffer.allocateDirect(VERTICES_SIZE)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
-            
-            ShortBuffer indices = ByteBuffer.allocateDirect(INDICES_SIZE)
-                .order(ByteOrder.nativeOrder())
-                .asShortBuffer();
-            
-            for(int i = 0; i < objects.length; i++)
-            {
-                vertices
-                    .put(objects[i].getVertices())
-                    .position((i + 1) * Cube.getVerticesLegth());
-                
-                indices
-                    .put(objects[i].getIndices())
-                    .position((i+1) * Cube.getIndicesLegth());
-            }
-            
-            vertices.position(0);
-            indices.position(0);
-            
-            int[] vertexBuffers = new int[2];
-            
-            GLES20.glGenBuffers(vertexBuffers.length, vertexBuffers, 0);
-            
-            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBuffers[0]);
-            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, VERTICES_SIZE, vertices, GLES20.GL_STATIC_DRAW);
-            
-            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, vertexBuffers[1]);
-            GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, INDICES_SIZE, indices, GLES20.GL_STATIC_DRAW);
-            
-            GLES20.glVertexAttribPointer(aPositionPointer, 
-                3,//int size,
-                GLES20.GL_FLOAT,//int type,
-                false,//boolean normalized,
-                6*BYTES_PER_FLOAT,//int stride,
-                0//int offset
-            );
-            
-            GLES20.glVertexAttribPointer(aNormalPointer, 
-                3,//int size,
-                GLES20.GL_FLOAT,//int type,
-                false,//boolean normalized,
-                6*BYTES_PER_FLOAT,//int stride,
-                3*BYTES_PER_FLOAT//int offset
-            );
-            
-            GLES20.glEnableVertexAttribArray(aPositionPointer);
-            
-            GLES20.glEnableVertexAttribArray(aNormalPointer);
+            prepareVertexBuffers();
             
             GLES20.glClearColor(0.3f, 0.9f, 0.9f, 1.0f);
             
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+            
+        //texturing
+            prepareTextures();
         }
         catch(Exception e)
         {
@@ -168,29 +100,168 @@ public class MyRenderer implements Renderer
         }
     }
     
+    protected void prepareVertexBuffers()
+    {
+        final int BYTES_PER_FLOAT = Float.SIZE / 8;
+        final int STRIDE = Cube.getVerticesStride() * BYTES_PER_FLOAT;
+        int OFFSET = 0;
+        
+        int[] vertexBuffers = new int[2];
+        
+        GLES20.glGenBuffers(vertexBuffers.length, vertexBuffers, 0);
+        
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vertexBuffers[0]);
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, Rubix.getVertices().limit() * BYTES_PER_FLOAT, Rubix.getVertices(), GLES20.GL_STATIC_DRAW);
+        
+        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, vertexBuffers[1]);
+        GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, Rubix.getIndices().limit() * Cube.BYTES_PER_INDEX, Rubix.getIndices(), GLES20.GL_STATIC_DRAW);
+        
+        ////  coords                  normal                  //color             //tex coords
+        GLES20.glVertexAttribPointer(aPositionPointer,
+            Cube.COORDS_LENGTH,//int size,
+            GLES20.GL_FLOAT,//int type,
+            false,//boolean normalized,
+            STRIDE,//int stride,
+            OFFSET//int offset
+        );
+        
+        OFFSET += Cube.COORDS_LENGTH * BYTES_PER_FLOAT;
+        
+        GLES20.glVertexAttribPointer(aNormalPointer,
+            Cube.NORMAL_LENGTH,//int size,
+            GLES20.GL_FLOAT,//int type,
+            false,//boolean normalized,
+            STRIDE,//int stride,
+            OFFSET//int offset
+        );
+        
+        OFFSET += Cube.NORMAL_LENGTH * BYTES_PER_FLOAT;
+        OFFSET += Cube.COLOR_LENGTH * BYTES_PER_FLOAT;
+        
+        GLES20.glVertexAttribPointer(aTexCoordPointer, 
+            2,//int size,
+            GLES20.GL_FLOAT,//int type,
+            false,//boolean normalized,
+            STRIDE,//int stride,
+            OFFSET//int offset
+        );
+        
+        GLES20.glEnableVertexAttribArray(aPositionPointer);
+        GLES20.glEnableVertexAttribArray(aNormalPointer);
+        GLES20.glEnableVertexAttribArray(aTexCoordPointer);
+    }
+    
+    protected void prepareFrameBuffer() throws Exception
+    {
+        if(GLES20.glIsFramebuffer(framebuffers[0]))
+            GLES20.glDeleteFramebuffers(framebuffers.length, framebuffers, 0);
+        
+        int[] renderbuffers = new int[1];
+        
+        GLES20.glGenRenderbuffers(renderbuffers.length, renderbuffers, 0);
+        
+        GLES20.glGenFramebuffers(framebuffers.length, framebuffers, 0);
+        
+        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, renderbuffers[0]);
+        
+        GLES20.glRenderbufferStorage(
+            GLES20.GL_RENDERBUFFER,
+            GLES20.GL_RGB565,
+            camera.getWidth(),
+            camera.getHeight()
+        );
+        
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebuffers[0]);
+        
+        GLES20.glFramebufferRenderbuffer(
+            GLES20.GL_FRAMEBUFFER,
+            GLES20.GL_COLOR_ATTACHMENT0,
+            GLES20.GL_RENDERBUFFER,
+            renderbuffers[0]
+        );
+        
+        checkFramebufferStatus();
+    }
+    
+    protected void checkFramebufferStatus() throws Exception
+    {
+        int status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
+        
+        switch(status)
+        {
+            case GLES20.GL_FRAMEBUFFER_COMPLETE:
+                Log.i(TAG, "Framebuffer is complete");
+            break;
+            
+            case GLES20.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                throw new Exception("The framebuffer attachment points are not complete");
+            
+            case GLES20.GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+                throw new Exception("Attachments do not have the same width and height");
+            
+            case GLES20.GL_FRAMEBUFFER_UNSUPPORTED:
+                throw new Exception("Combination of internal formats used by attachments in the frmabuffer results in a nonrenderable target");
+            
+            default:
+                throw new Exception("Undefined framebuffer status");
+        }
+    }
+    
+    protected void prepareTextures()
+    {
+        Bitmap bitmap = ((BitmapDrawable)context.getResources().getDrawable(R.drawable.tex1)).getBitmap();
+        
+        int[] textures = new int[1];
+        final int FORMAT = GLES20.GL_RGBA;
+        ByteBuffer b = getPixelsBuffer(bitmap);
+        
+        GLES20.glGenTextures(textures.length, textures, 0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+        
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+        
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE); 
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+        
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+        
+        GLES20.glUniform1i(sTexturePointer, GLES20.GL_TEXTURE0);
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+    }
+    
+    protected ByteBuffer getPixelsBuffer(Bitmap bitmap)
+    {
+        ByteBuffer b = ByteBuffer.allocate(bitmap.getByteCount());
+        bitmap.copyPixelsToBuffer(b);
+        
+        return b;
+    }
+    
     @Override
     public void onDrawFrame(GL10 unused)
     {
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebuffers[0]);
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+        cacheVPMatrix();
+        
+        GLES20.glUseProgram(mainProgram);
+        
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         
         GLES20.glUniform4fv(uLightPositionPointer, 1, camera.getEyeVec4(), 0);
         
-        final int count = 4;
+        final int count = Cube.indices.length;
         int offset_step = count * Cube.BYTES_PER_INDEX;
         int offset = -offset_step;
         
-        cacheVPMatrix();
         
-        for(Cube cube : objects)
+        
+        for(Cube cube : Rubix.cubes)
         {
             GLES20.glUniformMatrix4fv(uMVPMatrixPointer, 1, false, getMVPMatrix(cube), 0);
             
-            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
-            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
-            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
-            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
-            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
-            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, count, GLES20.GL_UNSIGNED_SHORT, offset += offset_step);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLES, Cube.indices.length, GLES20.GL_UNSIGNED_INT, offset += offset_step);
         }
     }
     
@@ -214,6 +285,13 @@ public class MyRenderer implements Renderer
         GLES20.glViewport(0, 0, width, height);
         
         camera.setSize(width, height);
+        
+        try {
+            prepareFrameBuffer();
+            Log.i(TAG, "FBO name: "+ framebuffers[0]);
+        } catch(Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
     }
     
     private int loadShader(int type, String shaderSource) throws Exception
@@ -241,7 +319,7 @@ public class MyRenderer implements Renderer
         return shader;
     }
     
-    private int createProgram() throws Exception
+    private int createProgram(final String vShaderSource, final String fShaderSource) throws Exception
     {
          int
             program = GLES20.glCreateProgram(),
@@ -250,8 +328,8 @@ public class MyRenderer implements Renderer
         if(program == 0)
             throw new Exception("can't create a gl program object");
         
-        GLES20.glAttachShader(program, loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderSource));
-        GLES20.glAttachShader(program, loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderSource));
+        GLES20.glAttachShader(program, loadShader(GLES20.GL_VERTEX_SHADER, vShaderSource));
+        GLES20.glAttachShader(program, loadShader(GLES20.GL_FRAGMENT_SHADER, fShaderSource));
         GLES20.glGetProgramiv(program, GLES20.GL_ATTACHED_SHADERS, params, 0);
         
         if(params[0] != 2)
@@ -268,8 +346,6 @@ public class MyRenderer implements Renderer
         
         if(params[0] == 0)
             throw new Exception(GLES20.glGetProgramInfoLog(program));
-        
-        GLES20.glUseProgram(program);
         
         //__logProgramInfo(program);
         

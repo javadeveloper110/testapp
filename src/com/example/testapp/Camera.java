@@ -8,7 +8,7 @@ class Camera
     private
         float
             fovy = 30f,//float: field of view in y direction, in degrees
-            zNear = 1f,
+            zNear = 1.0f,
             zFar = 50f,
             
             _eye[] = {0f, 0f, -25f, 1f},
@@ -39,6 +39,8 @@ class Camera
                 0,0,1f,0,
                 0,0,0,1f,
             };
+    
+    private int width, height;
     
     Camera()
     {
@@ -90,13 +92,26 @@ class Camera
     /**
      * set screen size
     */
-    public void setSize(final int width, final int height)
+    public void setSize(final int w, final int h)
     {
+        width = w;
+        height = h;
+        
         float aspect = (float)width / height;//float: width to height aspect ratio of the viewport
         
         Matrix.perspectiveM(projectionMatrix, 0, fovy, aspect, zNear, zFar);
         
         update();
+    }
+    
+    public int getWidth()
+    {
+        return width;
+    }
+    
+    public int getHeight()
+    {
+        return height;
     }
     
     /**
