@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ByteOrder;
+import android.opengl.GLES20;
 
 /**
  * Rubik's scheme
@@ -128,5 +129,19 @@ final class RubiksCube
     public IntBuffer getIndices()
     {
         return indices;
+    }
+    
+    public void render(final int model_matrix_location)
+    {
+        final int offset_step = Cube.indices.length * Cube.BYTES_PER_INDEX;
+        
+        int offset = -offset_step;
+        
+        for(Cube cube : cubes)
+        {
+            GLES20.glUniformMatrix4fv(model_matrix_location, 1, false, cube.getMatrix(), 0);
+            
+            GLES20.glDrawElements(GLES20.GL_TRIANGLES, Cube.indices.length, GLES20.GL_UNSIGNED_INT, offset += offset_step);
+        }
     }
 }

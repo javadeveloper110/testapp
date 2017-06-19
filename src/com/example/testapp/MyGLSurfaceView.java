@@ -22,13 +22,6 @@ class MyGLSurfaceView extends GLSurfaceView
         Log.i(TAG, "MyGLSurfaceView.constructor");
     }
     
-    public void surfaceCreated(SurfaceHolder holder)
-    {
-        super.surfaceCreated(holder);
-        
-        Log.i(TAG, "MyGLSurfaceView.surfaceCreated");
-    }
-    
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
@@ -39,6 +32,8 @@ class MyGLSurfaceView extends GLSurfaceView
                 
                 beginX = event.getAxisValue(MotionEvent.AXIS_X, pointerId);
                 beginY = event.getAxisValue(MotionEvent.AXIS_Y, pointerId);
+                
+                //renderer.getPixRgbColor((int)beginX, (int)beginY);
             break;
             
             case MotionEvent.ACTION_MOVE:

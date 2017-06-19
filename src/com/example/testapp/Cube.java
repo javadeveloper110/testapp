@@ -15,7 +15,9 @@ class Cube
     
     private float[] vertices_data;
     
-    private final float SHIFT_STEP = 2.0f;
+    private final float
+        SHIFT_STEP = 2.0f,
+        COLOR_STEP = 1.0f / 31;
     
     private float rotationMatrix[] = {
         1f, 0f, 0f, 0f,
@@ -88,14 +90,14 @@ class Cube
             to;
         
         float
-            red_component = (float)(index + 1) / positions.length,
-            green_component,
+            red_component,
+            green_component = (float)(index + 1) * COLOR_STEP,
             blue_component;
         
         for(int face = 0; face < 6; face++)
         {
-            green_component = (float)(face + 1) / 10;
-            blue_component = (float)(6 - face) / 10;
+            red_component = (float)(face + 1) * COLOR_STEP;
+            blue_component = (float)(6 - face) * COLOR_STEP;
             
             for(int vertex = 0; vertex < 4; vertex++)
             {
